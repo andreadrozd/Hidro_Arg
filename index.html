@@ -365,7 +365,7 @@ function initPlotly(vid) {
   }], {
     title:{text:'Municipios por categoría',font:{size:12,color:'#1a3a5c'},x:0.5},
     xaxis:{range:[0,Math.max.apply(null,countArr)*1.4],showgrid:false},
-    yaxis:{autorange:'reversed'},
+    yaxis:{autorange:'reversed',ticksuffix:'   '},
     height:175, margin:{l:110,r:10,t:32,b:20},
     paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
   }, {responsive:true,displayModeBar:false});
@@ -385,7 +385,7 @@ function initPlotly(vid) {
     textposition:'outside', textfont:{size:11},
   }], {
     title:{text:'▲ Top 10 mayores',font:{size:11,color:'#1a3a5c'},x:0.5},
-    yaxis:{autorange:'reversed'},
+    yaxis:{autorange:'reversed',ticksuffix:'   '},
     xaxis:{range:[0,(top10.length?top10[0].val:1)*1.35],showgrid:false},
     height:220, margin:{l:130,r:10,t:28,b:15},
     paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
@@ -401,7 +401,7 @@ function initPlotly(vid) {
     textposition:'outside', textfont:{size:11},
   }], {
     title:{text:'▼ Top 10 menores',font:{size:11,color:'#1a3a5c'},x:0.5},
-    yaxis:{autorange:'reversed'},
+    yaxis:{autorange:'reversed',ticksuffix:'   '},
     xaxis:{range:[0,Math.max(bot10.length?bot10[bot10.length-1].val:1, 0.01)*1.35],showgrid:false},
     height:220, margin:{l:130,r:10,t:28,b:15},
     paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
