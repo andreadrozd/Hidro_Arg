@@ -114,51 +114,52 @@ var PERIODS = [
 ];
 
 var VARS = {
-  ppt_mean:  {label:'Precipitación Media',               unit:'mm',    icon:'\u{1F327}️',
+  ppt_mean:  {label:'Precipitación Acumulada',             unit:'mm',    icon:'\u{1F327}️',
     thresholds:[
-      {cat:'Bajo',    rgb:[215,48,39],   test:function(v){return v<15}},
-      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=15&&v<=120}},
-      {cat:'Elevado', rgb:[33,102,172],  test:function(v){return v>120}},
+      {cat:'Bajo',              rgb:[215,48,39],   range:'< 70 mm',        test:function(v){return v<70}},
+      {cat:'Satisfactorio',     rgb:[77,172,38],   range:'70 – 150 mm',    test:function(v){return v>=70&&v<=150}},
+      {cat:'Levemente elevado', rgb:[116,173,209], range:'150 – 200 mm',   test:function(v){return v>150&&v<=200}},
+      {cat:'Elevado',           rgb:[33,102,172],  range:'> 200 mm',       test:function(v){return v>200}},
     ], vmin:0, vmax:210},
   APPT_mean: {label:'Anomalía de Precipitación',         unit:'(adim.)', icon:'\u{1F4CA}',
     thresholds:[
-      {cat:'Déficit',      rgb:[215,48,39],   test:function(v){return v<-0.5}},
-      {cat:'Normal',       rgb:[77,172,38],   test:function(v){return v>=-0.5&&v<=0.5}},
-      {cat:'Leve exceso',  rgb:[116,173,209], test:function(v){return v>0.5&&v<=1.0}},
-      {cat:'Exceso',       rgb:[33,102,172],  test:function(v){return v>1.0}},
+      {cat:'Déficit',      rgb:[215,48,39],   range:'< −0.5',         test:function(v){return v<-0.5}},
+      {cat:'Normal',       rgb:[77,172,38],   range:'−0.5 – 0.5',     test:function(v){return v>=-0.5&&v<=0.5}},
+      {cat:'Leve exceso',  rgb:[116,173,209], range:'0.5 – 1.0',      test:function(v){return v>0.5&&v<=1.0}},
+      {cat:'Exceso',       rgb:[33,102,172],  range:'> 1.0',           test:function(v){return v>1.0}},
     ], vmin:-0.6, vmax:1.4},
-  Tppt_mean: {label:'Tasa de Precipitación Diaria',      unit:'mm/día', icon:'⏱️',
+  Tppt_mean: {label:'Tasa de Precipitación durante Días de Lluvia', unit:'mm/día', icon:'⏱️',
     thresholds:[
-      {cat:'Bajo',            rgb:[215,48,39],   test:function(v){return v<5}},
-      {cat:'Normal',          rgb:[77,172,38],   test:function(v){return v>=5&&v<=13}},
-      {cat:'Levemente alto',  rgb:[116,173,209], test:function(v){return v>13&&v<=20}},
-      {cat:'Elevado',         rgb:[33,102,172],  test:function(v){return v>20}},
+      {cat:'Bajo',            rgb:[215,48,39],   range:'< 5 mm/día',     test:function(v){return v<5}},
+      {cat:'Satisfactorio',   rgb:[77,172,38],   range:'5 – 13 mm/día',  test:function(v){return v>=5&&v<=13}},
+      {cat:'Levemente alto',  rgb:[116,173,209], range:'13 – 20 mm/día', test:function(v){return v>13&&v<=20}},
+      {cat:'Elevado',         rgb:[33,102,172],  range:'> 20 mm/día',    test:function(v){return v>20}},
     ], vmin:0, vmax:95},
   Hum_mean:  {label:'Humedad del Suelo Media',           unit:'m³/m³', icon:'\u{1F4A7}',
     thresholds:[
-      {cat:'Bajo',    rgb:[215,48,39],   test:function(v){return v<0.25}},
-      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=0.25&&v<=0.38}},
-      {cat:'Elevado', rgb:[33,102,172],  test:function(v){return v>0.38}},
+      {cat:'Bajo',    rgb:[215,48,39],   range:'< 0.25 m³/m³',       test:function(v){return v<0.25}},
+      {cat:'Satisfactorio',  rgb:[77,172,38],   range:'0.25 – 0.38 m³/m³',  test:function(v){return v>=0.25&&v<=0.38}},
+      {cat:'Elevado', rgb:[33,102,172],  range:'> 0.38 m³/m³',       test:function(v){return v>0.38}},
     ], vmin:0.15, vmax:0.42},
   AHum_mean: {label:'Anomalía de Humedad del Suelo',     unit:'(adim.)', icon:'\u{1F331}',
     thresholds:[
-      {cat:'Déficit', rgb:[215,48,39],   test:function(v){return v<-0.05}},
-      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=-0.05&&v<=0.05}},
-      {cat:'Exceso',  rgb:[33,102,172],  test:function(v){return v>0.05}},
+      {cat:'Déficit', rgb:[215,48,39],   range:'< −0.05',         test:function(v){return v<-0.05}},
+      {cat:'Normal',  rgb:[77,172,38],   range:'−0.05 – 0.05',   test:function(v){return v>=-0.05&&v<=0.05}},
+      {cat:'Exceso',  rgb:[33,102,172],  range:'> 0.05',          test:function(v){return v>0.05}},
     ], vmin:-0.11, vmax:0.07},
   Inf_mean:  {label:'Infiltración de Agua en Suelos',    unit:'mm', icon:'⬇️',
     thresholds:[
-      {cat:'Baja', rgb:[215,48,39],   test:function(v){return v===0}},
-      {cat:'Normal',           rgb:[77,172,38],   test:function(v){return v>0&&v<=10}},
-      {cat:'Elevada',          rgb:[33,102,172],  test:function(v){return v>10}},
+      {cat:'Baja',    rgb:[215,48,39],   range:'0 mm',          test:function(v){return v===0}},
+      {cat:'Satisfactorio',  rgb:[77,172,38],   range:'0 – 10 mm',     test:function(v){return v>0&&v<=10}},
+      {cat:'Elevada', rgb:[33,102,172],  range:'> 10 mm',       test:function(v){return v>10}},
     ], vmin:0, vmax:37},
 };
 
 var VAR_IDS = Object.keys(VARS);
 var CAT_HEX = {
   'Bajo':'#d73027','Déficit':'#d73027','Baja':'#d73027',
-  'Normal':'#4dac26',
-  'Leve exceso':'#74add1','Levemente alto':'#74add1',
+  'Normal':'#4dac26','Satisfactorio':'#4dac26',
+  'Leve exceso':'#74add1','Levemente alto':'#74add1','Levemente elevado':'#74add1',
   'Exceso':'#2166ac','Elevado':'#2166ac','Elevada':'#2166ac',
   'Sin datos':'#cccccc'
 };
@@ -215,7 +216,7 @@ function buildTabs() {
 
     // Legend
     var legendHtml = v.thresholds.map(function(t) {
-      return '<span class="leg-item"><span class="leg-sw" style="background:rgb('+t.rgb.join(',')+')"></span>' + t.cat + '</span>';
+      return '<span class="leg-item"><span class="leg-sw" style="background:rgb('+t.rgb.join(',')+')"></span>' + t.cat + (t.range ? ' ('+t.range+')' : '') + '</span>';
     }).join('');
 
     // Tab content
