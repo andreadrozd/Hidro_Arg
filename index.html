@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoreo Satelital de Aguas — Buenos Aires | LaDAAS ENVSAT</title>
+<script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<link  href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/deck.gl@9.0.36/dist.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
+
+.header{
+  background:linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%);
+  color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+}
+.header-logo{height:56px;width:auto;flex-shrink:0}
+.header-left h1{font-size:clamp(15px,2.2vw,21px);font-weight:700}
+.header-left p{font-size:clamp(11px,1.2vw,13px);opacity:.85;margin-top:2px}
+.header-badge{
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.28);
+  border-radius:8px;padding:4px 11px;font-size:11px;text-align:center;line-height:1.5;
+}
+.header-select{
+  background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);
+  border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;
+}
+.header-select option{color:#222;background:#fff}
+
+.tabs-bar{background:#1a3a5c;display:flex;flex-wrap:wrap;gap:3px;padding:6px 12px 0}
+.tab-btn{
+  background:rgba(255,255,255,.1);color:rgba(255,255,255,.72);
+  border:none;border-radius:6px 6px 0 0;padding:7px 13px;
+  font-size:clamp(11px,1.3vw,13px);cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+.tab-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.tab-btn.active{background:#eef1f5;color:#1a3a5c;font-weight:700}
+
+.tab-content{display:none;padding:10px 12px}
+.tab-content.active{display:block}
+
+.var-header{
+  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
+  background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.09);
+}
+.var-icon{font-size:22px}
+.var-title{font-size:clamp(15px,1.6vw,18px);font-weight:700;color:#1a3a5c}
+.var-unit{font-size:11px;color:#666;background:#e8ecf1;padding:2px 7px;border-radius:10px}
+.legend-row{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:5px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#333;
+  background:#f0f2f5;padding:3px 8px;border-radius:14px}
+.leg-sw{width:15px;height:15px;border-radius:3px;flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,.12)}
+
+.layout-grid{display:grid;grid-template-columns:1fr 380px;gap:10px;height:calc(100vh - 180px)}
+.map-panel,.dash-panel{
+  background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:6px;overflow-y:auto;
+}
+.map-div{width:100%;height:calc(100% - 22px);min-height:400px;position:relative;border-radius:6px;overflow:hidden;background:#e2e6ec}
+.map-panel{display:flex;flex-direction:column}
+.map-hint{font-size:10px;color:#999;text-align:center;padding:3px 0 1px}
+.chart-box{margin-bottom:4px}
+
+.map-tooltip{
+  position:absolute;pointer-events:none;display:none;z-index:99;
+  background:rgba(18,36,60,.93);color:#fff;padding:7px 11px;border-radius:6px;
+  font-size:12px;line-height:1.5;max-width:220px;box-shadow:0 2px 10px rgba(0,0,0,.35);
+}
+
+.loading{display:flex;align-items:center;justify-content:center;height:300px;font-size:14px;color:#888}
+
+.footer{text-align:center;padding:8px;font-size:10px;color:#888;background:#dde3ec;margin-top:6px}
+
+@media(max-width:960px){.layout-grid{grid-template-columns:1fr}.dash-panel{order:2}}
+@media(max-width:600px){
+  .header{padding:8px 10px}
+  .tabs-bar{padding:4px 6px 0}
+  .tab-btn{padding:5px 7px;font-size:10px}
+  .tab-content{padding:6px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img id="logo-cyano" class="header-logo" alt="CyanoSat">
+  <div class="header-left">
+    <h1>Monitoreo Satelital de Aguas — Provincia de Buenos Aires</h1>
+    <p>Mapas 3D temáticos por partido | Variables hidroclimáticas | LaDAAS · ENVSAT</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <select id="period-select" class="header-select" onchange="loadPeriod(this.value)"></select>
+    <div class="header-badge" id="badge-info">Cargando...</div>
+  </div>
+  <img id="logo-envsat" class="header-logo" alt="ENVSAT">
+</div>
+
+<div class="tabs-bar" id="tabs-bar"></div>
+<div class="tabs-container" id="tabs-container"></div>
+
+<div class="footer">
+  LaDAAS — Laboratorio de Desarrollos de Aplicaciones Ambientales y Satelitales — UNDAV |
+  ENVSAT: Monitoreo Ambiental Satelital
+</div>
+
+<script>
+// ── Configuration ────────────────────────────────────────────────────────────
+var DATA_DIR = 'data/';
+
+var PERIODS = [
+  {file: 'Hidro_BsAs_0526.geojson', label: 'Mayo 2026'},
+];
+
+var VARS = {
+  ppt_mean:  {label:'Precipitación Media',               unit:'mm',    icon:'\u{1F327}️',
+    thresholds:[
+      {cat:'Bajo',    rgb:[215,48,39],   test:function(v){return v<15}},
+      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=15&&v<=120}},
+      {cat:'Elevado', rgb:[33,102,172],  test:function(v){return v>120}},
+    ], vmin:0, vmax:210},
+  APPT_mean: {label:'Anomalía de Precipitación',         unit:'(adim.)', icon:'\u{1F4CA}',
+    thresholds:[
+      {cat:'Déficit',      rgb:[215,48,39],   test:function(v){return v<-0.5}},
+      {cat:'Normal',       rgb:[77,172,38],   test:function(v){return v>=-0.5&&v<=0.5}},
+      {cat:'Leve exceso',  rgb:[116,173,209], test:function(v){return v>0.5&&v<=1.0}},
+      {cat:'Exceso',       rgb:[33,102,172],  test:function(v){return v>1.0}},
+    ], vmin:-0.6, vmax:1.4},
+  Tppt_mean: {label:'Tasa de Precipitación Diaria',      unit:'mm/día', icon:'⏱️',
+    thresholds:[
+      {cat:'Bajo',            rgb:[215,48,39],   test:function(v){return v<5}},
+      {cat:'Normal',          rgb:[77,172,38],   test:function(v){return v>=5&&v<=13}},
+      {cat:'Levemente alto',  rgb:[116,173,209], test:function(v){return v>13&&v<=20}},
+      {cat:'Elevado',         rgb:[33,102,172],  test:function(v){return v>20}},
+    ], vmin:0, vmax:95},
+  Hum_mean:  {label:'Humedad del Suelo Media',           unit:'m³/m³', icon:'\u{1F4A7}',
+    thresholds:[
+      {cat:'Bajo',    rgb:[215,48,39],   test:function(v){return v<0.25}},
+      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=0.25&&v<=0.38}},
+      {cat:'Elevado', rgb:[33,102,172],  test:function(v){return v>0.38}},
+    ], vmin:0.15, vmax:0.42},
+  AHum_mean: {label:'Anomalía de Humedad del Suelo',     unit:'(adim.)', icon:'\u{1F331}',
+    thresholds:[
+      {cat:'Déficit', rgb:[215,48,39],   test:function(v){return v<-0.05}},
+      {cat:'Normal',  rgb:[77,172,38],   test:function(v){return v>=-0.05&&v<=0.05}},
+      {cat:'Exceso',  rgb:[33,102,172],  test:function(v){return v>0.05}},
+    ], vmin:-0.11, vmax:0.07},
+  Inf_mean:  {label:'Infiltración de Agua en Suelos',    unit:'mm', icon:'⬇️',
+    thresholds:[
+      {cat:'Baja', rgb:[215,48,39],   test:function(v){return v===0}},
+      {cat:'Normal',           rgb:[77,172,38],   test:function(v){return v>0&&v<=10}},
+      {cat:'Elevada',          rgb:[33,102,172],  test:function(v){return v>10}},
+    ], vmin:0, vmax:37},
+};
+
+var VAR_IDS = Object.keys(VARS);
+var CAT_HEX = {
+  'Bajo':'#d73027','Déficit':'#d73027','Baja':'#d73027',
+  'Normal':'#4dac26',
+  'Leve exceso':'#74add1','Levemente alto':'#74add1',
+  'Exceso':'#2166ac','Elevado':'#2166ac','Elevada':'#2166ac',
+  'Sin datos':'#cccccc'
+};
+
+var MAX_ELEVATION = 80000;
+var deckInstances = {};
+var currentGeoJSON = null;
+var initialized = {};
+
+// ── Logos (base64) ───────────────────────────────────────────────────────────
+function loadLogos() {
+  // Load logos from data/ directory as base64 text files
+  fetch(DATA_DIR + '../cyanosat_b64.txt').then(r=>r.text()).then(function(b64){
+    document.getElementById('logo-cyano').src = 'data:image/png;base64,' + b64.trim();
+  }).catch(function(){});
+  fetch(DATA_DIR + '../envsat_b64.txt').then(r=>r.text()).then(function(b64){
+    document.getElementById('logo-envsat').src = 'data:image/png;base64,' + b64.trim();
+  }).catch(function(){});
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getCat(val, thresholds) {
+  if (val === null || val === undefined || isNaN(val)) return {cat:'Sin datos', rgb:[180,180,180]};
+  for (var i=0; i<thresholds.length; i++) {
+    if (thresholds[i].test(val)) return thresholds[i];
+  }
+  return {cat:'Sin datos', rgb:[180,180,180]};
+}
+
+function normElev(val, vmin, vmax) {
+  if (val === null || val === undefined || isNaN(val)) return 0.05;
+  var t = (val - vmin) / (vmax - vmin);
+  return Math.max(0.05, Math.min(1.0, t));
+}
+
+// ── Build tabs HTML ──────────────────────────────────────────────────────────
+function buildTabs() {
+  var bar = document.getElementById('tabs-bar');
+  var container = document.getElementById('tabs-container');
+  bar.innerHTML = '';
+  container.innerHTML = '';
+
+  VAR_IDS.forEach(function(vid, i) {
+    var v = VARS[vid];
+    var active = i === 0;
+
+    // Button
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (active ? ' active' : '');
+    btn.id = 'btn-' + vid;
+    btn.onclick = function() { showTab(vid); };
+    btn.textContent = v.icon + ' ' + v.label;
+    bar.appendChild(btn);
+
+    // Legend
+    var legendHtml = v.thresholds.map(function(t) {
+      return '<span class="leg-item"><span class="leg-sw" style="background:rgb('+t.rgb.join(',')+')"></span>' + t.cat + '</span>';
+    }).join('');
+
+    // Tab content
+    var div = document.createElement('div');
+    div.id = 'tab-' + vid;
+    div.className = 'tab-content' + (active ? ' active' : '');
+    div.innerHTML =
+      '<div class="var-header">' +
+        '<span class="var-icon">' + v.icon + '</span>' +
+        '<span class="var-title">' + v.label + '</span>' +
+        '<span class="var-unit">' + v.unit + '</span>' +
+        '<div class="legend-row">' + legendHtml + '</div>' +
+      '</div>' +
+      '<div class="layout-grid">' +
+        '<div class="map-panel">' +
+          '<div id="deckgl-'+vid+'" class="map-div">' +
+            '<div id="tooltip-'+vid+'" class="map-tooltip"></div>' +
+          '</div>' +
+          '<div class="map-hint">Arrastrar para rotar | Scroll para zoom | Hover para info</div>' +
+        '</div>' +
+        '<div class="dash-panel">' +
+          '<div id="dash-'+vid+'" class="chart-box"></div>' +
+          '<div id="top-'+vid+'" class="chart-box"></div>' +
+          '<div id="bot-'+vid+'" class="chart-box"></div>' +
+        '</div>' +
+      '</div>';
+    container.appendChild(div);
+  });
+}
+
+// ── Deck.gl map ──────────────────────────────────────────────────────────────
+function initDeck(vid) {
+  if (!currentGeoJSON) return;
+  var container = document.getElementById('deckgl-' + vid);
+  if (!container || container.offsetWidth === 0) return;
+
+  // Destroy previous instance
+  if (deckInstances[vid]) {
+    deckInstances[vid].finalize();
+    delete deckInstances[vid];
+  }
+
+  var vdef = VARS[vid];
+  var tooltipEl = document.getElementById('tooltip-' + vid);
+
+  // Pre-process: inject color/elevation into features
+  var gj = JSON.parse(JSON.stringify(currentGeoJSON));
+  gj.features.forEach(function(f) {
+    var val = f.properties[vid];
+    var c = getCat(val, vdef.thresholds);
+    f.properties._r = c.rgb[0];
+    f.properties._g = c.rgb[1];
+    f.properties._b = c.rgb[2];
+    f.properties._cat = c.cat;
+    f.properties._elev = normElev(val, vdef.vmin, vdef.vmax);
+    f.properties._val = (val !== null && val !== undefined && !isNaN(val)) ? val.toFixed(3) : 'N/D';
+  });
+
+  var layer = new deck.GeoJsonLayer({
+    id: 'geo-' + vid,
+    data: gj,
+    extruded: true,
+    filled: true,
+    stroked: true,
+    wireframe: true,
+    elevationScale: MAX_ELEVATION,
+    getElevation: function(f) { return f.properties._elev; },
+    getFillColor: function(f) { return [f.properties._r, f.properties._g, f.properties._b, 255]; },
+    getLineColor: function(f) { return [f.properties._r, f.properties._g, f.properties._b, 255]; },
+    getLineWidth: 80,
+    lineWidthMinPixels: 0.3,
+    pickable: true,
+    autoHighlight: true,
+    highlightColor: [255, 255, 255, 70],
+    material: {
+      ambient: 0.35,
+      diffuse: 0.7,
+      shininess: 32,
+      specularColor: [180, 180, 180]
+    },
+    onHover: function(pi) {
+      if (pi.object) {
+        var p = pi.object.properties;
+        tooltipEl.innerHTML = '<b>' + (p.nam||'') + '</b><br>' +
+          vdef.label + ': ' + p._val + ' ' + vdef.unit + '<br>Estado: <b>' + p._cat + '</b>';
+        tooltipEl.style.display = 'block';
+        tooltipEl.style.left = (pi.x + 14) + 'px';
+        tooltipEl.style.top  = (pi.y - 10) + 'px';
+      } else {
+        tooltipEl.style.display = 'none';
+      }
+    }
+  });
+
+  deckInstances[vid] = new deck.DeckGL({
+    container: 'deckgl-' + vid,
+    mapLib: maplibregl,
+    mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    initialViewState: {
+      longitude: -61.5, latitude: -36.8,
+      zoom: 5.3, pitch: 50, bearing: -15,
+    },
+    controller: true,
+    layers: [layer],
+    effects: [new deck.LightingEffect({
+      ambientLight: new deck.AmbientLight({ color: [255,255,255], intensity: 1.0 }),
+      dirLight: new deck.DirectionalLight({
+        color: [255,255,240],
+        intensity: 2.2,
+        direction: [-1, 0, -1]
+      })
+    })]
+  });
+}
+
+// ── Plotly dashboards ────────────────────────────────────────────────────────
+function initPlotly(vid) {
+  if (!currentGeoJSON) return;
+  var vdef = VARS[vid];
+  var col = vid;
+  var features = currentGeoJSON.features;
+
+  // Count by category
+  var catOrder = vdef.thresholds.map(function(t){return t.cat}).concat(['Sin datos']);
+  var counts = {};
+  catOrder.forEach(function(c){counts[c]=0});
+  var vals = [];
+
+  features.forEach(function(f) {
+    var v = f.properties[col];
+    var c = getCat(v, vdef.thresholds);
+    counts[c.cat] = (counts[c.cat]||0) + 1;
+    if (v !== null && v !== undefined && !isNaN(v)) vals.push({nam: f.properties.nam||'', val: v, cat: c.cat});
+  });
+
+  var total = features.length;
+  var countArr = catOrder.map(function(c){return counts[c]||0});
+  var pcts = countArr.map(function(n){return total>0?(n/total*100).toFixed(1):'0'});
+  var barColors = catOrder.map(function(c){return CAT_HEX[c]||'#aaa'});
+
+  // Dashboard bars
+  Plotly.newPlot('dash-'+vid, [{
+    y: catOrder, x: countArr, orientation:'h', type:'bar',
+    marker:{color:barColors},
+    text: countArr.map(function(n,i){return n+' ('+pcts[i]+'%)'}),
+    textposition:'outside', textfont:{size:11},
+  }], {
+    title:{text:'Municipios por categoría',font:{size:12,color:'#1a3a5c'},x:0.5},
+    xaxis:{range:[0,Math.max.apply(null,countArr)*1.4],showgrid:false},
+    yaxis:{autorange:'reversed'},
+    height:175, margin:{l:110,r:10,t:32,b:20},
+    paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
+  }, {responsive:true,displayModeBar:false});
+
+  // Sort for top/bottom
+  vals.sort(function(a,b){return b.val-a.val});
+  var top10 = vals.slice(0,10);
+  var bot10 = vals.slice(-10).reverse();
+
+  // Top 10
+  Plotly.newPlot('top-'+vid, [{
+    y:top10.map(function(d){return d.nam.substring(0,20)}),
+    x:top10.map(function(d){return d.val}),
+    orientation:'h', type:'bar',
+    marker:{color:top10.map(function(d){return CAT_HEX[d.cat]||'#aaa'})},
+    text:top10.map(function(d){return d.val.toFixed(2)}),
+    textposition:'outside', textfont:{size:11},
+  }], {
+    title:{text:'▲ Top 10 mayores',font:{size:11,color:'#1a3a5c'},x:0.5},
+    yaxis:{autorange:'reversed'},
+    xaxis:{range:[0,(top10.length?top10[0].val:1)*1.35],showgrid:false},
+    height:220, margin:{l:130,r:10,t:28,b:15},
+    paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
+  }, {responsive:true,displayModeBar:false});
+
+  // Bottom 10
+  Plotly.newPlot('bot-'+vid, [{
+    y:bot10.map(function(d){return d.nam.substring(0,20)}),
+    x:bot10.map(function(d){return d.val}),
+    orientation:'h', type:'bar',
+    marker:{color:bot10.map(function(d){return CAT_HEX[d.cat]||'#aaa'})},
+    text:bot10.map(function(d){return d.val.toFixed(2)}),
+    textposition:'outside', textfont:{size:11},
+  }], {
+    title:{text:'▼ Top 10 menores',font:{size:11,color:'#1a3a5c'},x:0.5},
+    yaxis:{autorange:'reversed'},
+    xaxis:{range:[0,Math.max(bot10.length?bot10[bot10.length-1].val:1, 0.01)*1.35],showgrid:false},
+    height:220, margin:{l:130,r:10,t:28,b:15},
+    paper_bgcolor:'#f4f6fa', plot_bgcolor:'#f4f6fa',
+  }, {responsive:true,displayModeBar:false});
+}
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+function showTab(vid) {
+  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
+  document.querySelectorAll('.tab-btn').forEach(function(el){el.classList.remove('active')});
+  document.getElementById('tab-'+vid).classList.add('active');
+  document.getElementById('btn-'+vid).classList.add('active');
+
+  if (!initialized[vid]) {
+    setTimeout(function(){
+      initDeck(vid);
+      initPlotly(vid);
+      initialized[vid] = true;
+    }, 80);
+  } else {
+    ['dash','top','bot'].forEach(function(p){
+      var el = document.getElementById(p+'-'+vid);
+      if (el) Plotly.relayout(el, {});
+    });
+  }
+}
+
+// ── Load period data ─────────────────────────────────────────────────────────
+function loadPeriod(file) {
+  // Reset
+  for (var k in deckInstances) {
+    if (deckInstances[k]) deckInstances[k].finalize();
+  }
+  deckInstances = {};
+  initialized = {};
+
+  fetch(DATA_DIR + file)
+    .then(function(r){ return r.json(); })
+    .then(function(gj){
+      currentGeoJSON = gj;
+      var n = gj.features.length;
+      document.getElementById('badge-info').innerHTML = n + ' partidos<br>6 variables';
+
+      // Find label for this file
+      var lbl = file;
+      PERIODS.forEach(function(p){ if(p.file===file) lbl=p.label; });
+      document.querySelector('.header-left p').textContent =
+        'Mapas 3D temáticos por partido | Variables hidroclimáticas | ' + lbl;
+
+      buildTabs();
+      // Init first tab
+      setTimeout(function(){
+        var first = VAR_IDS[0];
+        initDeck(first);
+        initPlotly(first);
+        initialized[first] = true;
+      }, 200);
+    })
+    .catch(function(err){
+      document.getElementById('badge-info').textContent = 'Error cargando datos';
+      console.error(err);
+    });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  loadLogos();
+
+  // Populate period selector
+  var sel = document.getElementById('period-select');
+  PERIODS.forEach(function(p, i){
+    var opt = document.createElement('option');
+    opt.value = p.file;
+    opt.textContent = p.label;
+    if (i===0) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  // Load first period
+  loadPeriod(PERIODS[0].file);
+});
+
+window.addEventListener('resize', function(){
+  for (var vid in deckInstances) {
+    if (deckInstances[vid]) deckInstances[vid].redraw(true);
+  }
+});
+</script>
+</body>
+</html>
