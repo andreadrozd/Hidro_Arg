@@ -147,12 +147,13 @@ var VARS = {
       {cat:'Normal',  rgb:[77,172,38],   range:'−0.05 – 0.05',   test:function(v){return v>=-0.05&&v<=0.05}},
       {cat:'Exceso',  rgb:[33,102,172],  range:'> 0.05',          test:function(v){return v>0.05}},
     ], vmin:-0.11, vmax:0.07},
-  inf_mean:  {label:'Infiltración Media Mensual de Agua en Suelos',    unit:'mm', icon:'⬇️',
+  inf_mean:  {label:'Infiltración acumulada media mensual de agua en suelos',    unit:'mm', icon:'⬇️',
     thresholds:[
       {cat:'Déficit',    rgb:[215,48,39],   range:'< 0 mm',        test:function(v){return v<0}},
       {cat:'Baja',       rgb:[253,174,97],  range:'0 – 5 mm',      test:function(v){return v>=0&&v<5}},
       {cat:'Aceptable',  rgb:[77,172,38],   range:'5 – 10 mm',     test:function(v){return v>=5&&v<=10}},
-      {cat:'Buena',      rgb:[116,173,209], range:'> 10 mm',       test:function(v){return v>10}},
+      {cat:'Buena',      rgb:[116,173,209], range:'10 – 20 mm',    test:function(v){return v>10&&v<=20}},
+      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 20 mm',       test:function(v){return v>20}},
     ], vmin:0, vmax:37},
   InfEf_mean: {label:'Eficiencia de Infiltración (Inf/PPT)',  unit:'(adim.)', icon:'\u{1F4A7}',
     thresholds:[
@@ -350,6 +351,11 @@ function initPlotly(vid) {
   var col = vid;
   var features = currentGeoJSON.features;
 
+  // Colores por categoría tomados de los umbrales de ESTA variable (coinciden con el mapa)
+  var catColor = {};
+  vdef.thresholds.forEach(function(t){ catColor[t.cat] = 'rgb('+t.rgb.join(',')+')'; });
+  catColor['Sin datos'] = '#cccccc';
+
   // Count by category
   var catOrder = vdef.thresholds.map(function(t){return t.cat}).concat(['Sin datos']);
   var counts = {};
@@ -366,7 +372,7 @@ function initPlotly(vid) {
   var total = features.length;
   var countArr = catOrder.map(function(c){return counts[c]||0});
   var pcts = countArr.map(function(n){return total>0?(n/total*100).toFixed(1):'0'});
-  var barColors = catOrder.map(function(c){return CAT_HEX[c]||'#aaa'});
+  var barColors = catOrder.map(function(c){return catColor[c]||'#aaa'});
 
   // Dashboard bars
   Plotly.newPlot('dash-'+vid, [{
@@ -392,7 +398,7 @@ function initPlotly(vid) {
     y:top10.map(function(d){return d.nam.substring(0,20)}),
     x:top10.map(function(d){return d.val}),
     orientation:'h', type:'bar',
-    marker:{color:top10.map(function(d){return CAT_HEX[d.cat]||'#aaa'})},
+    marker:{color:top10.map(function(d){return catColor[d.cat]||'#aaa'})},
     text:top10.map(function(d){return d.val.toFixed(2)}),
     textposition:'outside', textfont:{size:11},
   }], {
@@ -408,7 +414,7 @@ function initPlotly(vid) {
     y:bot10.map(function(d){return d.nam.substring(0,20)}),
     x:bot10.map(function(d){return d.val}),
     orientation:'h', type:'bar',
-    marker:{color:bot10.map(function(d){return CAT_HEX[d.cat]||'#aaa'})},
+    marker:{color:bot10.map(function(d){return catColor[d.cat]||'#aaa'})},
     text:bot10.map(function(d){return d.val.toFixed(2)}),
     textposition:'outside', textfont:{size:11},
   }], {
