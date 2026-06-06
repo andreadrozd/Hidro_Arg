@@ -149,10 +149,18 @@ var VARS = {
     ], vmin:-0.11, vmax:0.07},
   Inf_mean:  {label:'Infiltración Media Mensual de Agua en Suelos',    unit:'mm', icon:'⬇️',
     thresholds:[
-      {cat:'Baja',    rgb:[215,48,39],   range:'< 5 mm',        test:function(v){return v<5}},
-      {cat:'Satisfactoria',  rgb:[77,172,38],   range:'5 – 10 mm',     test:function(v){return v>=5&&v<=10}},
-      {cat:'Buena',   rgb:[33,102,172],  range:'> 10 mm',       test:function(v){return v>10}},
+      {cat:'Baja',       rgb:[215,48,39],   range:'< 5 mm',        test:function(v){return v<5}},
+      {cat:'Aceptable',  rgb:[77,172,38],   range:'5 – 12 mm',     test:function(v){return v>=5&&v<=12}},
+      {cat:'Buena',      rgb:[116,173,209], range:'12 – 18 mm',    test:function(v){return v>12&&v<=18}},
+      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 18 mm',       test:function(v){return v>18}},
     ], vmin:0, vmax:37},
+  infEf_mean: {label:'Porcentaje de Precipitación Infiltrada',  unit:'%', icon:'\u{1F4A7}',
+    thresholds:[
+      {cat:'Baja',       rgb:[215,48,39],   range:'< 7%',          test:function(v){return v<7}},
+      {cat:'Aceptable',  rgb:[77,172,38],   range:'7 – 15%',       test:function(v){return v>=7&&v<=15}},
+      {cat:'Buena',      rgb:[116,173,209], range:'15 – 22%',      test:function(v){return v>15&&v<=22}},
+      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 22%',         test:function(v){return v>22}},
+    ], vmin:0, vmax:35},
 };
 
 var VAR_IDS = Object.keys(VARS);
@@ -160,8 +168,9 @@ var CAT_HEX = {
   'Bajo':'#d73027','Déficit':'#d73027','Baja':'#d73027',
   'Normal':'#4dac26','Satisfactorio':'#4dac26',
   'Leve exceso':'#74add1','Levemente alto':'#74add1','Levemente elevado':'#74add1',
-  'Exceso':'#2166ac','Elevado':'#2166ac','Elevada':'#2166ac','Buena':'#2166ac',
-  'Satisfactoria':'#4dac26',
+  'Exceso':'#2166ac','Elevado':'#2166ac','Elevada':'#2166ac',
+  'Aceptable':'#4dac26','Satisfactoria':'#4dac26',
+  'Buena':'#74add1','Muy buena':'#2166ac',
   'Sin datos':'#cccccc'
 };
 
@@ -445,7 +454,7 @@ function loadPeriod(file) {
     .then(function(gj){
       currentGeoJSON = gj;
       var n = gj.features.length;
-      document.getElementById('badge-info').innerHTML = n + ' partidos<br>6 variables';
+      document.getElementById('badge-info').innerHTML = n + ' partidos<br>7 variables';
 
       // Find label for this file
       var lbl = file;
