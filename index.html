@@ -147,25 +147,26 @@ var VARS = {
       {cat:'Normal',  rgb:[77,172,38],   range:'−0.05 – 0.05',   test:function(v){return v>=-0.05&&v<=0.05}},
       {cat:'Exceso',  rgb:[33,102,172],  range:'> 0.05',          test:function(v){return v>0.05}},
     ], vmin:-0.11, vmax:0.07},
-  Inf_mean:  {label:'Infiltración Media Mensual de Agua en Suelos',    unit:'mm', icon:'⬇️',
+  inf_mean:  {label:'Infiltración Media Mensual de Agua en Suelos',    unit:'mm', icon:'⬇️',
     thresholds:[
-      {cat:'Baja',       rgb:[215,48,39],   range:'< 5 mm',        test:function(v){return v<5}},
-      {cat:'Aceptable',  rgb:[77,172,38],   range:'5 – 12 mm',     test:function(v){return v>=5&&v<=12}},
-      {cat:'Buena',      rgb:[116,173,209], range:'12 – 18 mm',    test:function(v){return v>12&&v<=18}},
-      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 18 mm',       test:function(v){return v>18}},
+      {cat:'Déficit',    rgb:[215,48,39],   range:'< 0 mm',        test:function(v){return v<0}},
+      {cat:'Baja',       rgb:[253,174,97],  range:'0 – 5 mm',      test:function(v){return v>=0&&v<5}},
+      {cat:'Aceptable',  rgb:[77,172,38],   range:'5 – 10 mm',     test:function(v){return v>=5&&v<=10}},
+      {cat:'Buena',      rgb:[116,173,209], range:'> 10 mm',       test:function(v){return v>10}},
     ], vmin:0, vmax:37},
-  infEf_mean: {label:'Porcentaje de Precipitación Infiltrada',  unit:'%', icon:'\u{1F4A7}',
+  InfEf_mean: {label:'Eficiencia de Infiltración (Inf/PPT)',  unit:'(adim.)', icon:'\u{1F4A7}',
     thresholds:[
-      {cat:'Baja',       rgb:[215,48,39],   range:'< 7%',          test:function(v){return v<7}},
-      {cat:'Aceptable',  rgb:[77,172,38],   range:'7 – 15%',       test:function(v){return v>=7&&v<=15}},
-      {cat:'Buena',      rgb:[116,173,209], range:'15 – 22%',      test:function(v){return v>15&&v<=22}},
-      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 22%',         test:function(v){return v>22}},
-    ], vmin:0, vmax:35},
+      {cat:'Déficit',    rgb:[215,48,39],   range:'< 0',           test:function(v){return v<0}},
+      {cat:'Baja',       rgb:[253,174,97],  range:'0 – 0.07',      test:function(v){return v>=0&&v<0.07}},
+      {cat:'Aceptable',  rgb:[77,172,38],   range:'0.07 – 0.15',   test:function(v){return v>=0.07&&v<=0.15}},
+      {cat:'Buena',      rgb:[116,173,209], range:'0.15 – 0.22',   test:function(v){return v>0.15&&v<=0.22}},
+      {cat:'Muy buena',  rgb:[33,102,172],  range:'> 0.22',        test:function(v){return v>0.22}},
+    ], vmin:0, vmax:0.3},
 };
 
 var VAR_IDS = Object.keys(VARS);
 var CAT_HEX = {
-  'Bajo':'#d73027','Déficit':'#d73027','Baja':'#d73027',
+  'Bajo':'#d73027','Déficit':'#d73027','Baja':'#fdae61',
   'Normal':'#4dac26','Satisfactorio':'#4dac26',
   'Leve exceso':'#74add1','Levemente alto':'#74add1','Levemente elevado':'#74add1',
   'Exceso':'#2166ac','Elevado':'#2166ac','Elevada':'#2166ac',
@@ -275,7 +276,7 @@ function initDeck(vid) {
   // Pre-process: inject color/elevation into features
   var gj = JSON.parse(JSON.stringify(currentGeoJSON));
   gj.features.forEach(function(f) {
-    var val = f.properties[vid];
+    var val = parseFloat(f.properties[vid]);
     var c = getCat(val, vdef.thresholds);
     f.properties._r = c.rgb[0];
     f.properties._g = c.rgb[1];
@@ -356,10 +357,10 @@ function initPlotly(vid) {
   var vals = [];
 
   features.forEach(function(f) {
-    var v = f.properties[col];
+    var v = parseFloat(f.properties[col]);
     var c = getCat(v, vdef.thresholds);
     counts[c.cat] = (counts[c.cat]||0) + 1;
-    if (v !== null && v !== undefined && !isNaN(v)) vals.push({nam: f.properties.nam||'', val: v, cat: c.cat});
+    if (!isNaN(v)) vals.push({nam: f.properties.nam||'', val: v, cat: c.cat});
   });
 
   var total = features.length;
