@@ -28,6 +28,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
   border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;
 }
 .header-select option{color:#222;background:#fff}
+.header-link{
+  background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);
+  border-radius:6px;padding:5px 11px;font-size:12px;cursor:pointer;text-decoration:none;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:5px;transition:background .18s;
+}
+.header-link:hover{background:rgba(255,255,255,.32)}
 
 .tabs-bar{background:#1a3a5c;display:flex;flex-wrap:wrap;gap:3px;padding:6px 12px 0}
 .tab-btn{
@@ -92,6 +98,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <select id="period-select" class="header-select" onchange="loadPeriod(this.value)"></select>
+    <a href="metodologia.html" target="_blank" rel="noopener" class="header-link" title="Ver la metodología de las variables">&#8505;&#65039; Metodología</a>
     <div class="header-badge" id="badge-info">Cargando...</div>
   </div>
   <img id="logo-envsat" class="header-logo" alt="ENVSAT">
