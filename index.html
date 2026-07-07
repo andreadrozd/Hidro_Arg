@@ -152,6 +152,52 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
   .tab-btn{flex:1 1 calc(25% - 4px);padding:8px 4px;font-size:13px}
   .tab-content{padding:6px}
 }
+
+/* ── MODO CELULAR ─────────────────────────────────────────────────────────── */
+@media(max-width:760px){
+  /* Lanzador lateral centrado verticalmente (no tapa la leyenda) */
+  .query-panel{top:50%;transform:translateY(-50%)}
+  .query-panel.collapsed{transform:translateY(-50%) translateX(100%)}
+  .query-body{width:190px}
+  .query-title{font-size:15px}
+  .query-btn{font-size:14px;padding:11px 12px;margin-bottom:8px}
+  .qb-ic{font-size:20px}
+
+  /* Paneles: dejan de flotar -> hoja acoplada abajo, ancho completo */
+  .float-panel{
+    top:auto!important;left:0!important;right:0!important;bottom:0!important;
+    width:100%!important;max-width:100%!important;
+    border-radius:16px 16px 0 0;box-shadow:0 -6px 26px rgba(0,0,0,.32);
+  }
+  .float-head{cursor:default;font-size:16px;padding:12px 15px}
+  .float-x{font-size:26px}
+  .float-body{max-height:72vh;padding:14px 16px}
+  .float-hint{font-size:14px;padding:22px 8px}
+
+  /* Textos de resultados más grandes */
+  .mu-head{font-size:17px}
+  .mu-sub{font-size:13px;margin-bottom:11px}
+  .mu-row{padding:8px 0;gap:9px}
+  .mu-ic{font-size:20px;width:26px}
+  .mu-lbl{font-size:14.5px}
+  .mu-chip{font-size:12px;padding:3px 9px}
+  .mu-val{font-size:14.5px;min-width:86px}
+
+  .tl-head{font-size:17px}
+  .tl-sub{font-size:13px;margin-bottom:11px}
+  .tl-cell{width:98px;padding:10px 6px}
+  .tl-month{font-size:13px}
+  .tl-chip{width:42px;height:42px;line-height:42px;font-size:21px}
+  .tl-val{font-size:15.5px}
+  .tl-cat{font-size:12px}
+
+  .prov-select{font-size:15px;padding:9px 10px}
+  .prov-var{font-size:13.5px;padding:7px 10px}
+  .prov-section h4{font-size:14.5px}
+  .prov-cat-row,.prov-rank-row{font-size:14px;padding:4px 0}
+  .prov-rank-val{font-size:14px}
+  .prov-sw{width:14px;height:14px}
+}
 </style>
 </head>
 <body>
@@ -571,8 +617,21 @@ function toggleQueryPanel() {
 }
 
 function isOpen(id) { var el = document.getElementById(id); return el && el.classList.contains('open'); }
+function isMobile() { return window.matchMedia('(max-width:760px)').matches; }
+function collapseQuery() {
+  var qp = document.getElementById('query-panel');
+  if (qp && !qp.classList.contains('collapsed')) {
+    qp.classList.add('collapsed');
+    document.getElementById('query-toggle').innerHTML = '&#9664;';
+  }
+}
 
 function openFloat(which) {
+  // En celular: una consulta a la vez + plegar el lanzador lateral
+  if (isMobile()) {
+    ['prov', 'muni', 'temporal', 'resumen'].forEach(function(w){ if (w !== which) closeFloat(w); });
+    collapseQuery();
+  }
   document.getElementById('float-' + which).classList.add('open');
   if (which === 'prov') {
     if (!document.getElementById('prov-select').options.length) populateProvinces();
@@ -715,6 +774,7 @@ function initDrags() {
   document.querySelectorAll('.float-panel .float-head').forEach(function(h) {
     var panel = h.parentElement, drag = false, sx, sy, ox, oy;
     h.addEventListener('mousedown', function(e) {
+      if (isMobile()) return;              // en celular el panel va acoplado abajo, sin arrastre
       if (e.target.classList.contains('float-x')) return;
       var r = panel.getBoundingClientRect();
       panel.style.left = r.left + 'px'; panel.style.top = r.top + 'px';
