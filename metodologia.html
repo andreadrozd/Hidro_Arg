@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Metodología — Monitoreo Hídrico Buenos Aires | LaDAAS ENVSAT</title>
+<title>Metodología — Monitoreo Hídrico Argentina | LaDAAS ENVSAT</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;line-height:1.6}
@@ -78,8 +78,8 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
 
 <div class="header">
   <div class="header-left">
-    <h1>Metodología — Monitoreo Hídrico de Buenos Aires</h1>
-    <p>Variables del visor 3D · Proyecto Hidro BsAs | LaDAAS · ENVSAT</p>
+    <h1>Metodología — Monitoreo Hídrico de Argentina</h1>
+    <p>Variables del visor 3D · Proyecto Hidro Arg | LaDAAS · ENVSAT</p>
   </div>
   <a href="index.html" class="back-link">&#8592; Volver al dashboard</a>
 </div>
@@ -101,13 +101,16 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
       <li class="grp">Infiltración (ERA5-Land)</li>
       <li><a href="#inf">6. Infiltración media mensual</a></li>
       <li><a href="#infef">7. Eficiencia de infiltración</a></li>
+      <li class="grp">Agregación temporal</li>
+      <li><a href="#resumen">8. Resumen del período</a></li>
       <li class="grp">&nbsp;</li>
       <li><a href="#sintesis">Síntesis y referencias</a></li>
     </ul>
   </div>
 
   <div class="card">
-    <p class="intro">El dashboard <b>Monitoreo Hídrico — Provincia de Buenos Aires</b> presenta <b>7 variables</b> por partido (143 municipios), reducidas a su valor medio zonal. Provienen de tres productos satelitales/de reanálisis, elegidos según la variable: <b>GSMaP</b> (precipitación), <b>SMAP</b> (humedad del suelo) y <b>ERA5-Land</b> (infiltración). Esta página documenta el cálculo, las unidades y los umbrales de cada una.</p>
+    <p class="intro">El dashboard <b>Monitoreo Hídrico — Argentina</b> presenta <b>7 variables</b> por departamento (<b>527 unidades</b>, nivel ADM2), reducidas a su valor medio zonal. Cada departamento se identifica con su <b>código INDEC</b> (campo <code>in1</code>, 5 dígitos), que permite unir los datos entre meses y filtrar por provincia. Las variables provienen de tres productos satelitales/de reanálisis, elegidos según la variable: <b>GSMaP</b> (precipitación), <b>SMAP</b> (humedad del suelo) y <b>ERA5-Land</b> (infiltración). Esta página documenta el cálculo, las unidades y los umbrales de cada una.</p>
+    <div class="callout"><b>Sobre los umbrales.</b> Las categorías y rangos de cada variable se calibraron originalmente en el estudio de la <b>provincia de Buenos Aires</b> (Drozd et al. 2025) y se aplican a todo el país como primera aproximación. En regiones con regímenes muy distintos (árido patagónico, subtropical del NEA) conviene interpretarlos con ese recaudo.</div>
   </div>
 
   <!-- FUENTES -->
@@ -123,8 +126,8 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
       </tbody>
     </table>
     <ul style="margin:8px 0 0 22px;font-size:13.5px">
-      <li><b>Reducción espacial:</b> estadística zonal (media) sobre los 143 partidos.</li>
-      <li><b>Flujo:</b> GEE → estadística zonal por partido → shapefile → GeoJSON (<code>shp_a_geojson.py</code>) → dashboard.</li>
+      <li><b>Reducción espacial:</b> estadística zonal (media) sobre los 527 departamentos (capa IGN, nivel ADM2).</li>
+      <li><b>Flujo:</b> GEE → estadística zonal por departamento (clave <code>in1</code>) → shapefile → GeoJSON → serie compacta (<code>series_hidro.json</code>) → dashboard.</li>
     </ul>
     <div class="callout">
       <b>¿Por qué GSMaP y no CHIRPS o GPM?</b> CHIRPS (0.05°) tiene ~15 días de latencia y GPM (0.1°) ~32 h; <b>GSMaP</b> (0.1°, horaria) tiene la menor latencia (~20 h), apta para un monitoreo casi continuo. Error estimado: 3–12 mm/h.<br>
@@ -136,7 +139,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
   <div class="card" id="ppt">
     <h2 class="sec">🌧️ 1. Precipitación acumulada <code>ppt_mean</code> <span class="srcbadge b-gsmap">GSMaP</span></h2>
     <p><b>Definición.</b> Lámina total de agua precipitada acumulada durante el mes, estimada por satélite.</p>
-    <p><b>Cálculo.</b> De GSMaP se seleccionan todas las imágenes del mes sobre la provincia y se <b>suman</b> los valores de la banda <code>hourlyPrecipRate</code>, renombrando el resultado <code>ppt</code>:</p>
+    <p><b>Cálculo.</b> De GSMaP se seleccionan todas las imágenes del mes sobre cada departamento y se <b>suman</b> los valores de la banda <code>hourlyPrecipRate</code>, renombrando el resultado <code>ppt</code>:</p>
     <div class="formula">ppt_mean (mm) = Σ(hourlyPrecipRate horaria del mes)</div>
     <p><b>Unidad:</b> mm (acumulado mensual).</p>
     <table>
@@ -148,7 +151,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td><span class="sw" style="background:#2166ac"></span>Elevado</td><td>&gt; 200 mm</td><td>Mes muy lluvioso / riesgo de excesos</td></tr>
       </tbody>
     </table>
-    <p><b>Contexto.</b> La precipitación anual de Buenos Aires presenta un gradiente del <b>sudoeste seco (~500–600 mm/año)</b> al <b>noreste húmedo (~1000–1100 mm/año)</b>, con promedios mensuales de 40–90 mm. En eventos extremos los acumulados superan ampliamente ese rango (marzo 2025: ~500 mm en el sudoeste, hasta 8× la media histórica).</p>
+    <p><b>Contexto.</b> A escala nacional la precipitación varía enormemente entre regiones (del árido patagónico y cuyano al subtropical húmedo del NEA). Como ejemplo, la provincia de Buenos Aires presenta un gradiente del <b>sudoeste seco (~500–600 mm/año)</b> al <b>noreste húmedo (~1000–1100 mm/año)</b>, con promedios mensuales de 40–90 mm; en eventos extremos los acumulados superan ampliamente ese rango (marzo 2025: ~500 mm en el sudoeste, hasta 8× la media histórica).</p>
   </div>
 
   <!-- 2 APPT -->
@@ -170,7 +173,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td><span class="sw" style="background:#2166ac"></span>Exceso</td><td>&gt; 1.0</td><td>Marcadamente más húmedo que lo normal</td></tr>
       </tbody>
     </table>
-    <p><b>Interpretación.</b> El cero es la referencia normal: positivos = exceso de lluvia, negativos = déficit. Al estar estandarizada por el rango, es comparable entre partidos con distintos regímenes de lluvia.</p>
+    <p><b>Interpretación.</b> El cero es la referencia normal: positivos = exceso de lluvia, negativos = déficit. Al estar estandarizada por el rango, es comparable entre departamentos con distintos regímenes de lluvia.</p>
   </div>
 
   <!-- 3 TPPT -->
@@ -248,7 +251,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td><span class="sw" style="background:#2166ac"></span>Muy buena</td><td>&gt; 20 mm</td><td>Recarga muy alta</td></tr>
       </tbody>
     </table>
-    <div class="callout"><b>¿Por qué ERA5-Land y no un modelo empírico (Horton)?</b> Los parámetros de Horton (fc, f0, k) dependen del tipo de suelo y de la humedad antecedente, información no disponible a escala de los 143 partidos. El modelo <b>HTESSEL</b> de ERA5-Land resuelve un esquema de infiltración físicamente basado con 4 capas de suelo, textura (FAO), humedad antecedente horaria y vegetación acoplada, integrando implícitamente la variabilidad edáfica.</div>
+    <div class="callout"><b>¿Por qué ERA5-Land y no un modelo empírico (Horton)?</b> Los parámetros de Horton (fc, f0, k) dependen del tipo de suelo y de la humedad antecedente, información no disponible a escala de los 527 departamentos. El modelo <b>HTESSEL</b> de ERA5-Land resuelve un esquema de infiltración físicamente basado con 4 capas de suelo, textura (FAO), humedad antecedente horaria y vegetación acoplada, integrando implícitamente la variabilidad edáfica.</div>
   </div>
 
   <!-- 7 INFEF -->
@@ -268,8 +271,27 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
       </tbody>
     </table>
     <div class="callout">
-      <b>¿Por qué el ratio y no la infiltración absoluta?</b> Los mm absolutos están fuertemente correlacionados con la precipitación y varían poco entre partidos. El ratio Inf/PPT tiene <b>mayor variabilidad espacial</b> (refleja humedad antecedente, pendiente y suelo), es <b>intuitivo</b> ("el 12 % de la lluvia se incorporó al suelo") y es <b>comparable con la literatura</b>: la recarga efectiva al acuífero freático en Buenos Aires se reporta entre <b>7 % y 26 %</b> de la precipitación según zona y método.
+      <b>¿Por qué el ratio y no la infiltración absoluta?</b> Los mm absolutos están fuertemente correlacionados con la precipitación y varían poco entre departamentos. El ratio Inf/PPT tiene <b>mayor variabilidad espacial</b> (refleja humedad antecedente, pendiente y suelo), es <b>intuitivo</b> ("el 12 % de la lluvia se incorporó al suelo") y es <b>comparable con la literatura</b>: la recarga efectiva al acuífero freático en Buenos Aires se reporta entre <b>7 % y 26 %</b> de la precipitación según zona y método.
     </div>
+  </div>
+
+  <!-- 8 RESUMEN DEL PERÍODO -->
+  <div class="card" id="resumen">
+    <h2 class="sec">🧮 8. Resumen del período</h2>
+    <p><b>Definición.</b> Consulta del dashboard que, para un departamento seleccionado, <b>agrega las 7 variables sobre todos los meses cargados</b> (por ejemplo un semestre o un año) y devuelve una síntesis del estado hídrico del período. La forma de agregar depende de la naturaleza de cada variable.</p>
+    <table>
+      <thead><tr><th>Variable</th><th>Agregación en el período</th><th>Por qué</th></tr></thead>
+      <tbody>
+        <tr><td><code>ppt_mean</code> · Precipitación acumulada</td><td><b>Σ suma</b></td><td>Lámina total de agua caída en el período.</td></tr>
+        <tr><td><code>inf_mean</code> · Infiltración</td><td><b>Σ suma</b></td><td>Recarga efectiva total acumulada del período.</td></tr>
+        <tr><td><code>APPT_mean</code> · Anomalía de precipitación</td><td><b>Σ suma</b></td><td>Índice acumulado de exceso/déficit de lluvia a lo largo del período.</td></tr>
+        <tr><td><code>Tppt_mean</code> · Tasa de precipitación</td><td><b>Media</b></td><td>Intensidad media representativa; no tiene sentido sumar tasas.</td></tr>
+        <tr><td><code>Hum_mean</code> · Humedad del suelo</td><td><b>Media</b></td><td>Estado hídrico promedio del suelo en el período.</td></tr>
+        <tr><td><code>InfEf_mean</code> · Eficiencia de infiltración</td><td><b>Media</b></td><td>Proporción media de la lluvia incorporada al suelo.</td></tr>
+        <tr><td><code>AHum_mean</code> · Anomalía de humedad del suelo</td><td><b>Última estimación</b></td><td>La humedad del suelo es un proceso acumulativo; la anomalía refleja el estado <b>resultante</b> del agua en el suelo superficial, por lo que se toma la medición <b>más reciente</b> del período, no su promedio.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn"><b>Categorías de color.</b> Los umbrales de cada variable están definidos para valores <b>mensuales</b>. En el resumen, las variables con <b>media</b> o <b>última estimación</b> conservan el chip de categoría con su color (misma escala mensual); las variables <b>acumuladas</b> (suma) se muestran con un chip neutro «Σ acumulado» y <b>sin color de categoría</b>, porque el valor sumado no es comparable con los umbrales mensuales.</div>
   </div>
 
   <!-- SÍNTESIS -->
