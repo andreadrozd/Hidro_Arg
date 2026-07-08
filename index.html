@@ -10,11 +10,13 @@
 <script src="https://unpkg.com/deck.gl@9.0.36/dist.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
+html,body{height:100%}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;display:flex;flex-direction:column;overflow:hidden}
 
 .header{
   background:linear-gradient(135deg,#1a3a5c 0%,#2d6a9f 100%);
   color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  flex:0 0 auto;
 }
 .header-logo{height:56px;width:auto;flex-shrink:0}
 .header-left h1{font-size:clamp(15px,2.2vw,21px);font-weight:700}
@@ -44,48 +46,73 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
 .header-cta:hover{transform:translateY(-1px);filter:brightness(1.07)}
 @keyframes ctaPulse{0%{box-shadow:0 0 0 0 rgba(255,140,60,.55)}70%{box-shadow:0 0 0 8px rgba(255,140,60,0)}100%{box-shadow:0 0 0 0 rgba(255,140,60,0)}}
 
-.tabs-bar{background:#1a3a5c;display:flex;flex-wrap:wrap;gap:4px;padding:6px 12px 0}
-.tab-btn{
-  flex:1 1 calc(25% - 6px);            /* ~4 por fila -> 7 solapas en 2 filas */
-  background:rgba(255,255,255,.1);color:rgba(255,255,255,.72);
-  border:none;border-radius:6px 6px 0 0;padding:9px 8px;
-  font-size:clamp(14px,1.6vw,16px);cursor:pointer;transition:all .18s;
-  white-space:normal;text-align:center;line-height:1.15;
-  display:flex;align-items:center;justify-content:center;gap:4px;
-}
-.tab-btn:hover{background:rgba(255,255,255,.2);color:#fff}
-.tab-btn.active{background:#eef1f5;color:#1a3a5c;font-weight:700}
+.tabs-bar{display:none}
 
-.tab-content{display:none;padding:10px 12px}
+/* Área de mapa a pantalla completa (estilo Windy) */
+#app{position:relative;flex:1 1 auto;overflow:hidden;background:#e2e6ec}
+.tabs-container{position:absolute;inset:0}
+.tab-content{display:none;position:absolute;inset:0}
 .tab-content.active{display:block}
-
-.var-header{
-  display:flex;align-items:center;flex-wrap:wrap;gap:6px;
-  background:#fff;border-radius:8px;padding:8px 12px;margin-bottom:10px;
-  box-shadow:0 1px 4px rgba(0,0,0,.09);
-}
-.var-icon{font-size:22px}
-.var-title{font-size:clamp(15px,1.6vw,18px);font-weight:700;color:#1a3a5c}
-.var-unit{font-size:11px;color:#666;background:#e8ecf1;padding:2px 7px;border-radius:10px}
-.legend-row{margin-left:auto;display:flex;align-items:center;flex-wrap:wrap;gap:5px}
-.leg-item{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:#333;
-  background:#f0f2f5;padding:3px 8px;border-radius:14px}
-.leg-sw{width:15px;height:15px;border-radius:3px;flex-shrink:0;display:inline-block;border:1px solid rgba(0,0,0,.12)}
-
-.layout-grid{display:grid;grid-template-columns:1fr;gap:10px;height:calc(100vh - 180px)}
-.map-panel,.dash-panel{
-  background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:6px;overflow-y:auto;
-}
-.map-div{width:100%;height:calc(100% - 22px);min-height:400px;position:relative;border-radius:6px;overflow:hidden;background:#e2e6ec}
-.map-panel{display:flex;flex-direction:column}
-.map-hint{font-size:10px;color:#999;text-align:center;padding:3px 0 1px}
-.chart-box{margin-bottom:4px}
+.map-div{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;background:#e2e6ec}
 
 .map-tooltip{
   position:absolute;pointer-events:none;display:none;z-index:99;
-  background:rgba(18,36,60,.93);color:#fff;padding:7px 11px;border-radius:6px;
-  font-size:12px;line-height:1.5;max-width:220px;box-shadow:0 2px 10px rgba(0,0,0,.35);
+  background:rgba(18,36,60,.93);color:#fff;padding:8px 12px;border-radius:6px;
+  font-size:13px;line-height:1.55;max-width:240px;box-shadow:0 2px 10px rgba(0,0,0,.35);
 }
+
+/* Lista de variables (borde derecho) */
+#var-list{position:absolute;top:12px;right:12px;z-index:40;display:flex;flex-direction:column;gap:6px;max-height:calc(100% - 24px);overflow-y:auto}
+.varitem{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.94);border:1px solid #cbd6e2;
+  border-radius:9px;padding:9px 12px;font-size:14px;color:#1a3a5c;cursor:pointer;white-space:nowrap;
+  box-shadow:0 1px 6px rgba(0,0,0,.16);transition:background .15s}
+.varitem:hover{background:#fff}
+.varitem.active{background:#1a3a5c;color:#fff;font-weight:700;border-color:#1a3a5c}
+.varitem .vi-ic{font-size:20px;line-height:1;flex-shrink:0}
+
+/* Control arriba-izquierda: rótulo "Menú" + botón ☰ */
+#top-ctrl{position:absolute;top:12px;left:12px;z-index:45;display:flex;flex-direction:column;align-items:center;gap:3px}
+.menu-cap{font-size:11px;font-weight:700;color:#1a3a5c;background:rgba(255,255,255,.92);padding:2px 9px;border-radius:6px;
+  box-shadow:0 1px 4px rgba(0,0,0,.15);letter-spacing:.3px}
+#menu-btn{width:44px;height:44px;border:none;border-radius:10px;background:#1a3a5c;color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);flex-shrink:0}
+#menu-btn:hover{background:#2d6a9f}
+.sp-search{padding:10px 12px 11px;flex:0 0 auto;background:#fff;border-bottom:1px solid #eef1f5;position:relative;z-index:5}
+#search-wrap{position:relative}
+#search-inp{width:100%;height:42px;border:1px solid #cbd6e2;border-radius:9px;padding:0 13px;font-size:14px;outline:none}
+#search-inp:focus{border-color:#2d6a9f}
+#search-sug{position:absolute;top:46px;left:0;right:0;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.24);
+  max-height:300px;overflow-y:auto;display:none;z-index:70}
+.sug-item{padding:10px 13px;font-size:14px;cursor:pointer;border-bottom:1px solid #eef1f5;color:#243b53}
+.sug-item:hover{background:#eef5fb}
+.sug-prov{color:#8a94a6;font-size:12px}
+.sug-empty{padding:10px 13px;font-size:13px;color:#999;font-style:italic}
+
+/* Leyenda (overlay abajo-izquierda) */
+#legend-ov{position:absolute;right:12px;bottom:12px;z-index:40;background:rgba(255,255,255,.95);
+  border-radius:11px;box-shadow:0 2px 12px rgba(0,0,0,.2);padding:10px 15px;max-width:min(560px,66%)}
+.lg-title{font-size:15px;font-weight:700;color:#1a3a5c;margin-bottom:7px}
+.lg-unit{font-weight:400;color:#66707d}
+.lg-items{display:flex;flex-wrap:wrap;gap:6px}
+.lg-item{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#333;background:#f0f2f5;padding:4px 9px;border-radius:14px}
+.lg-sw{width:15px;height:15px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,.12)}
+.lg-rng{font-weight:400;color:#66707d}
+
+/* Panel lateral izquierdo (se abre con ☰) */
+#side-panel{position:absolute;top:0;left:0;height:100%;width:40%;max-width:520px;min-width:320px;z-index:60;background:#fff;
+  box-shadow:3px 0 20px rgba(0,0,0,.22);transform:translateX(-102%);transition:transform .28s ease;display:flex;flex-direction:column}
+#side-panel.open{transform:translateX(0)}
+.sp-head{display:flex;align-items:center;justify-content:space-between;background:#1a3a5c;color:#fff;padding:12px 16px;flex:0 0 auto}
+.sp-head span{font-size:16px;font-weight:700}
+.sp-x{background:transparent;border:none;color:#fff;font-size:24px;line-height:1;cursor:pointer;padding:0 2px}
+.sp-x:hover{color:#ffd0d0}
+.sp-modes{display:flex;gap:4px;padding:8px 8px 0;background:#eef1f5;flex-wrap:wrap;flex:0 0 auto}
+.sp-mode{flex:1 1 auto;background:rgba(26,58,92,.08);border:none;border-radius:8px 8px 0 0;padding:9px 6px;font-size:13px;
+  color:#1a3a5c;cursor:pointer;white-space:nowrap}
+.sp-mode.active{background:#fff;font-weight:700}
+.sp-body{flex:1 1 auto;overflow-y:auto;padding:14px 16px}
+.sp-section{display:none}
+.sp-section.active{display:block}
 
 /* Panel de consultas (derecha, plegable) */
 .query-panel{position:fixed;top:226px;right:0;z-index:60;width:200px;transition:transform .25s ease}
@@ -122,7 +149,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
 /* Evolución temporal */
 .tl-head{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:2px}
 .tl-sub{font-size:11px;color:#777;margin-bottom:9px}
-.tl-wrap{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.tl-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
 .tl-cell{flex:0 0 auto;width:84px;text-align:center;background:#f6f8fb;border-radius:8px;padding:7px 5px}
 .tl-month{font-size:11px;color:#555;margin-bottom:5px;font-weight:600}
 .tl-chip{width:34px;height:34px;line-height:34px;margin:0 auto 5px;border-radius:8px;font-size:17px;color:#fff}
@@ -143,7 +170,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
 
 .loading{display:flex;align-items:center;justify-content:center;height:300px;font-size:14px;color:#888}
 
-.footer{text-align:center;padding:8px;font-size:10px;color:#888;background:#dde3ec;margin-top:6px}
+.footer{text-align:center;padding:6px;font-size:10px;color:#888;background:#dde3ec;flex:0 0 auto}
 
 @media(max-width:960px){.layout-grid{grid-template-columns:1fr}.dash-panel{order:2}}
 @media(max-width:600px){
@@ -155,48 +182,43 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
 
 /* ── MODO CELULAR ─────────────────────────────────────────────────────────── */
 @media(max-width:760px){
-  /* Lanzador lateral centrado verticalmente (no tapa la leyenda) */
-  .query-panel{top:50%;transform:translateY(-50%)}
-  .query-panel.collapsed{transform:translateY(-50%) translateX(100%)}
-  .query-body{width:190px}
-  .query-title{font-size:15px}
-  .query-btn{font-size:14px;padding:11px 12px;margin-bottom:8px}
-  .qb-ic{font-size:20px}
+  #side-panel{width:90%;max-width:none;min-width:0}
+  /* Variables: solo ícono */
+  .varitem .vi-lbl{display:none}
+  .varitem{padding:10px;gap:0}
+  .varitem .vi-ic{font-size:23px}
+  #var-list{gap:7px}
+  #search-inp{width:100%;height:46px;font-size:15px}
+  #legend-ov{left:10px;right:10px;bottom:10px;max-width:none}
+  .lg-title{font-size:16px}
+  .lg-item{font-size:14px}
 
-  /* Paneles: dejan de flotar -> hoja acoplada abajo, ancho completo */
-  .float-panel{
-    top:auto!important;left:0!important;right:0!important;bottom:0!important;
-    width:100%!important;max-width:100%!important;
-    border-radius:16px 16px 0 0;box-shadow:0 -6px 26px rgba(0,0,0,.32);
-  }
-  .float-head{cursor:default;font-size:16px;padding:12px 15px}
-  .float-x{font-size:26px}
-  .float-body{max-height:72vh;padding:14px 16px}
-  .float-hint{font-size:14px;padding:22px 8px}
+  /* Panel: textos grandes */
+  .sp-mode{font-size:14px;padding:11px 6px}
+  .sp-head span{font-size:17px}
+  .float-hint{font-size:14px;padding:20px 8px}
+  .mu-head{font-size:18px}
+  .mu-sub{font-size:13.5px;margin-bottom:11px}
+  .mu-row{padding:9px 0;gap:10px}
+  .mu-ic{font-size:21px;width:27px}
+  .mu-lbl{font-size:15px}
+  .mu-chip{font-size:12.5px;padding:3px 10px}
+  .mu-val{font-size:15px;min-width:88px}
+  .tl-head{font-size:18px}
+  .tl-sub{font-size:13.5px;margin-bottom:11px}
+  .prov-select{font-size:16px;padding:10px}
+  .prov-var{font-size:14px;padding:7px 10px}
+  .prov-section h4{font-size:15px}
+  .prov-cat-row,.prov-rank-row{font-size:14.5px;padding:5px 0}
+  .prov-rank-val{font-size:14.5px}
+  .prov-sw{width:15px;height:15px}
 
-  /* Textos de resultados más grandes */
-  .mu-head{font-size:17px}
-  .mu-sub{font-size:13px;margin-bottom:11px}
-  .mu-row{padding:8px 0;gap:9px}
-  .mu-ic{font-size:20px;width:26px}
-  .mu-lbl{font-size:14.5px}
-  .mu-chip{font-size:12px;padding:3px 9px}
-  .mu-val{font-size:14.5px;min-width:86px}
-
-  .tl-head{font-size:17px}
-  .tl-sub{font-size:13px;margin-bottom:11px}
-  .tl-cell{width:98px;padding:10px 6px}
-  .tl-month{font-size:13px}
-  .tl-chip{width:42px;height:42px;line-height:42px;font-size:21px}
-  .tl-val{font-size:15.5px}
-  .tl-cat{font-size:12px}
-
-  .prov-select{font-size:15px;padding:9px 10px}
-  .prov-var{font-size:13.5px;padding:7px 10px}
-  .prov-section h4{font-size:14.5px}
-  .prov-cat-row,.prov-rank-row{font-size:14px;padding:4px 0}
-  .prov-rank-val{font-size:14px}
-  .prov-sw{width:14px;height:14px}
+  /* Evolución temporal (vertical): tarjetas más grandes */
+  .tl-cell{width:132px;padding:12px 8px}
+  .tl-month{font-size:14.5px}
+  .tl-chip{width:46px;height:46px;line-height:46px;font-size:23px}
+  .tl-val{font-size:16.5px}
+  .tl-cat{font-size:13px}
 }
 </style>
 </head>
@@ -213,49 +235,50 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222}
     <a href="metodologia.html" target="_blank" rel="noopener" class="header-link" title="Ver la metodología de las variables">&#8505;&#65039; Metodología</a>
     <span class="header-hint">Más detalle:</span>
     <a href="https://cyanosat.envsat.com/monitoreo-hidrico-app-floods/" target="_blank" rel="noopener" class="header-cta" title="Para más detalle, ingresá a AppFloods">&#127754; AppFloods</a>
-    <div class="header-badge" id="badge-info">Cargando...</div>
   </div>
   <img id="logo-envsat" class="header-logo" alt="ENVSAT">
 </div>
 
-<div class="tabs-bar" id="tabs-bar"></div>
-<div class="tabs-container" id="tabs-container"></div>
+<div id="app">
+  <div class="tabs-container" id="tabs-container"></div>
 
-<div id="query-panel" class="query-panel">
-  <button id="query-toggle" class="query-toggle" onclick="toggleQueryPanel()" title="Mostrar / ocultar consultas">&#9654;</button>
-  <div class="query-body">
-    <div class="query-title">Consultas</div>
-    <button class="query-btn" onclick="openFloat('prov')"><span class="qb-ic">&#128202;</span><span>Estadísticas por provincia</span></button>
-    <button class="query-btn" onclick="openFloat('muni')"><span class="qb-ic">&#128203;</span><span>Resumen por municipio</span></button>
-    <button class="query-btn" onclick="openFloat('temporal')"><span class="qb-ic">&#128200;</span><span>Evolución temporal</span></button>
-    <button class="query-btn" onclick="openFloat('resumen')"><span class="qb-ic">&#129518;</span><span>Resumen del período</span></button>
+  <div id="top-ctrl">
+    <span class="menu-cap">Menú</span>
+    <button id="menu-btn" onclick="toggleSidePanel()" title="Consultas, búsqueda y estadísticas">&#9776;</button>
   </div>
-</div>
 
-<div id="float-prov" class="float-panel" style="top:120px;left:70px;width:322px">
-  <div class="float-head"><span>&#128202; Estadísticas por provincia</span><button class="float-x" onclick="closeFloat('prov')">&times;</button></div>
-  <div class="float-body">
-    <select id="prov-select" class="prov-select" onchange="renderProv()"></select>
-    <div id="prov-var" class="prov-var"></div>
-    <div id="prov-cats" class="prov-section"></div>
-    <div id="prov-top" class="prov-section"></div>
-    <div id="prov-bot" class="prov-section"></div>
+  <div id="var-list"></div>
+
+  <div id="legend-ov"></div>
+
+  <div id="side-panel">
+    <div class="sp-head"><span id="sp-title">Consultas</span><button class="sp-x" onclick="toggleSidePanel(false)" title="Cerrar">&times;</button></div>
+    <div class="sp-search">
+      <div id="search-wrap">
+        <input id="search-inp" type="text" placeholder="Buscar departamento…" autocomplete="off">
+        <div id="search-sug"></div>
+      </div>
+    </div>
+    <div class="sp-modes">
+      <button class="sp-mode" data-mode="prov" onclick="setPanelMode('prov')">&#128202; Provincia</button>
+      <button class="sp-mode" data-mode="muni" onclick="setPanelMode('muni')">&#128203; Municipio</button>
+      <button class="sp-mode" data-mode="resumen" onclick="setPanelMode('resumen')">&#129518; Período</button>
+      <button class="sp-mode" data-mode="temporal" onclick="setPanelMode('temporal')">&#128200; Evolución</button>
+    </div>
+    <div class="sp-body">
+      <div id="sp-placeholder" class="float-hint">Elegí una consulta en las solapas de arriba.</div>
+      <div id="mode-prov" class="sp-section">
+        <select id="prov-select" class="prov-select" onchange="renderProv()"></select>
+        <div id="prov-var" class="prov-var"></div>
+        <div id="prov-cats" class="prov-section"></div>
+        <div id="prov-top" class="prov-section"></div>
+        <div id="prov-bot" class="prov-section"></div>
+      </div>
+      <div id="mode-muni" class="sp-section"><div id="muni-body"><div class="float-hint">Hacé click en el mapa o buscá un departamento.</div></div></div>
+      <div id="mode-resumen" class="sp-section"><div id="resumen-body"><div class="float-hint">Hacé click en el mapa o buscá un departamento.</div></div></div>
+      <div id="mode-temporal" class="sp-section"><div id="temporal-body"><div class="float-hint">Hacé click en el mapa o buscá un departamento.</div></div></div>
+    </div>
   </div>
-</div>
-
-<div id="float-muni" class="float-panel" style="top:150px;right:90px;width:330px">
-  <div class="float-head"><span>&#128203; Resumen por municipio</span><button class="float-x" onclick="closeFloat('muni')">&times;</button></div>
-  <div class="float-body"><div id="muni-body"><div class="float-hint">Hacé click en un municipio del mapa.</div></div></div>
-</div>
-
-<div id="float-temporal" class="float-panel" style="bottom:70px;left:90px;width:min(560px,92vw)">
-  <div class="float-head"><span>&#128200; Evolución temporal</span><button class="float-x" onclick="closeFloat('temporal')">&times;</button></div>
-  <div class="float-body"><div id="temporal-body"><div class="float-hint">Hacé click en un municipio del mapa.</div></div></div>
-</div>
-
-<div id="float-resumen" class="float-panel" style="top:180px;right:130px;width:340px">
-  <div class="float-head"><span>&#129518; Resumen del período</span><button class="float-x" onclick="closeFloat('resumen')">&times;</button></div>
-  <div class="float-body"><div id="resumen-body"><div class="float-hint">Hacé click en un municipio del mapa.</div></div></div>
 </div>
 
 <div class="footer">
@@ -379,49 +402,49 @@ function normElev(val, vmin, vmax) {
 
 // ── Build tabs HTML ──────────────────────────────────────────────────────────
 function buildTabs() {
-  var bar = document.getElementById('tabs-bar');
   var container = document.getElementById('tabs-container');
-  bar.innerHTML = '';
   container.innerHTML = '';
-
   VAR_IDS.forEach(function(vid, i) {
-    var v = VARS[vid];
-    var active = i === 0;
-
-    // Button
-    var btn = document.createElement('button');
-    btn.className = 'tab-btn' + (active ? ' active' : '');
-    btn.id = 'btn-' + vid;
-    btn.onclick = function() { showTab(vid); };
-    btn.textContent = v.icon + ' ' + v.label;
-    bar.appendChild(btn);
-
-    // Legend
-    var legendHtml = v.thresholds.map(function(t) {
-      return '<span class="leg-item"><span class="leg-sw" style="background:rgb('+t.rgb.join(',')+')"></span>' + t.cat + (t.range ? ' ('+t.range+')' : '') + '</span>';
-    }).join('');
-
-    // Tab content
     var div = document.createElement('div');
     div.id = 'tab-' + vid;
-    div.className = 'tab-content' + (active ? ' active' : '');
+    div.className = 'tab-content' + (i === 0 ? ' active' : '');
     div.innerHTML =
-      '<div class="var-header">' +
-        '<span class="var-icon">' + v.icon + '</span>' +
-        '<span class="var-title">' + v.label + '</span>' +
-        '<span class="var-unit">' + v.unit + '</span>' +
-        '<div class="legend-row">' + legendHtml + '</div>' +
-      '</div>' +
-      '<div class="layout-grid">' +
-        '<div class="map-panel">' +
-          '<div id="deckgl-'+vid+'" class="map-div">' +
-            '<div id="tooltip-'+vid+'" class="map-tooltip"></div>' +
-          '</div>' +
-          '<div class="map-hint">Arrastrar para rotar | Scroll para zoom | Hover para info | Click para consultas</div>' +
-        '</div>' +
+      '<div id="deckgl-'+vid+'" class="map-div">' +
+        '<div id="tooltip-'+vid+'" class="map-tooltip"></div>' +
       '</div>';
     container.appendChild(div);
   });
+  buildVarList();
+}
+
+// Lista de variables (borde derecho, estilo Windy)
+function buildVarList() {
+  var el = document.getElementById('var-list');
+  if (!el) return;
+  el.innerHTML = '';
+  VAR_IDS.forEach(function(vid, i) {
+    var v = VARS[vid];
+    var b = document.createElement('button');
+    b.className = 'varitem' + (i === 0 ? ' active' : '');
+    b.setAttribute('data-vid', vid);
+    b.title = v.label;
+    b.onclick = function() { showTab(vid); };
+    b.innerHTML = '<span class="vi-ic">' + v.icon + '</span><span class="vi-lbl">' + v.label + '</span>';
+    el.appendChild(b);
+  });
+}
+
+// Leyenda overlay (nombre de variable + umbrales)
+function renderLegend(vid) {
+  var el = document.getElementById('legend-ov');
+  if (!el) return;
+  var v = VARS[vid];
+  var chips = v.thresholds.map(function(t) {
+    return '<span class="lg-item"><span class="lg-sw" style="background:rgb('+t.rgb.join(',')+')"></span>' +
+      t.cat + (t.range ? ' <span class="lg-rng">('+t.range+')</span>' : '') + '</span>';
+  }).join('');
+  el.innerHTML = '<div class="lg-title">' + v.icon + ' ' + v.label + ' <span class="lg-unit">(' + v.unit + ')</span></div>' +
+    '<div class="lg-items">' + chips + '</div>';
 }
 
 // ── Deck.gl map ──────────────────────────────────────────────────────────────
@@ -609,48 +632,103 @@ function initPlotly(vid) {
   }, {responsive:true,displayModeBar:false});
 }
 
-// ── Panel de consultas + flotantes ───────────────────────────────────────────
-function toggleQueryPanel() {
-  var p = document.getElementById('query-panel');
-  var collapsed = p.classList.toggle('collapsed');
-  document.getElementById('query-toggle').innerHTML = collapsed ? '&#9664;' : '&#9654;';
-}
-
-function isOpen(id) { var el = document.getElementById(id); return el && el.classList.contains('open'); }
+// ── Panel lateral + consultas ────────────────────────────────────────────────
+var currentMode = null;   // ninguna consulta activa hasta que el usuario elija una solapa
 function isMobile() { return window.matchMedia('(max-width:760px)').matches; }
-function collapseQuery() {
-  var qp = document.getElementById('query-panel');
-  if (qp && !qp.classList.contains('collapsed')) {
-    qp.classList.add('collapsed');
-    document.getElementById('query-toggle').innerHTML = '&#9664;';
-  }
+
+function toggleSidePanel(open) {
+  var p = document.getElementById('side-panel');
+  var willOpen = (open === undefined) ? !p.classList.contains('open') : open;
+  p.classList.toggle('open', willOpen);
+  document.getElementById('menu-btn').style.background = willOpen ? '#2d6a9f' : '';
+  // Al abrir NO se calcula ningún resumen: queda el aviso hasta que se elija una solapa.
 }
 
-function openFloat(which) {
-  // En celular: una consulta a la vez + plegar el lanzador lateral
-  if (isMobile()) {
-    ['prov', 'muni', 'temporal', 'resumen'].forEach(function(w){ if (w !== which) closeFloat(w); });
-    collapseQuery();
-  }
-  document.getElementById('float-' + which).classList.add('open');
-  if (which === 'prov') {
+function setPanelMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.sp-mode').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === mode); });
+  document.querySelectorAll('.sp-section').forEach(function(s){ s.classList.remove('active'); });
+  var ph = document.getElementById('sp-placeholder'); if (ph) ph.style.display = 'none';
+  document.getElementById('mode-' + mode).classList.add('active');
+  renderPanelMode(mode);
+}
+
+function renderPanelMode(mode) {
+  if (mode === 'prov') {
     if (!document.getElementById('prov-select').options.length) populateProvinces();
     renderProv();
-  } else if (which === 'muni') {
-    if (lastClickIn1) renderMuni(lastClickIn1);
-  } else if (which === 'temporal') {
-    if (lastClickIn1) renderTemporal(lastClickIn1);
-  } else if (which === 'resumen') {
-    if (lastClickIn1) renderResumen(lastClickIn1);
-  }
+  } else if (mode === 'muni')     { if (lastClickIn1) renderMuni(lastClickIn1); }
+  else if (mode === 'temporal')   { if (lastClickIn1) renderTemporal(lastClickIn1); }
+  else if (mode === 'resumen')    { if (lastClickIn1) renderResumen(lastClickIn1); }
 }
-function closeFloat(which) { document.getElementById('float-' + which).classList.remove('open'); }
 
-function refreshFloats() {
-  if (isOpen('float-prov')) renderProv();
-  if (isOpen('float-muni') && lastClickIn1) renderMuni(lastClickIn1);
-  if (isOpen('float-temporal') && lastClickIn1) renderTemporal(lastClickIn1);
-  if (isOpen('float-resumen') && lastClickIn1) renderResumen(lastClickIn1);
+// Refresca el modo activo cuando cambia la variable o el mes
+function refreshPanel() {
+  if (document.getElementById('side-panel').classList.contains('open')) renderPanelMode(currentMode);
+}
+
+// ── Buscador de departamentos + zoom ─────────────────────────────────────────
+function sinTilde(s) { return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ñÑ]/g, 'n').toLowerCase(); }
+
+function initSearch() {
+  var inp = document.getElementById('search-inp');
+  var sug = document.getElementById('search-sug');
+  if (!inp) return;
+  inp.addEventListener('input', function() {
+    var q = sinTilde(inp.value.trim());
+    if (!q || !currentGeoJSON) { sug.style.display = 'none'; return; }
+    var matches = currentGeoJSON.features.filter(function(f) {
+      return sinTilde(f.properties.iadepto_si || '').indexOf(q) >= 0;
+    }).sort(function(a, b){ return (a.properties.iadepto_si || '').localeCompare(b.properties.iadepto_si || ''); }).slice(0, 10);
+    if (!matches.length) { sug.innerHTML = '<div class="sug-empty">Sin resultados</div>'; sug.style.display = 'block'; return; }
+    sug.innerHTML = matches.map(function(f) {
+      var p = f.properties;
+      return '<div class="sug-item" onclick="pickDept(\'' + p.in1 + '\')">' + p.iadepto_si +
+        ' <span class="sug-prov">' + (p.iaprov_sin || '') + '</span></div>';
+    }).join('');
+    sug.style.display = 'block';
+  });
+  document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('search-wrap');
+    if (wrap && !wrap.contains(e.target)) sug.style.display = 'none';
+  });
+}
+
+function pickDept(in1) {
+  document.getElementById('search-sug').style.display = 'none';
+  var p = findFeat(in1);
+  if (p) document.getElementById('search-inp').value = p.iadepto_si || '';
+  zoomToDept(in1);
+  lastClickIn1 = in1;
+  setPanelMode('muni');   // el buscador vive dentro del panel: mostrar el resumen del depto buscado
+}
+
+function bboxOfFeature(feat) {
+  var minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  (function scan(c) {
+    if (typeof c[0] === 'number') {
+      if (c[0] < minx) minx = c[0]; if (c[0] > maxx) maxx = c[0];
+      if (c[1] < miny) miny = c[1]; if (c[1] > maxy) maxy = c[1];
+    } else { for (var i = 0; i < c.length; i++) scan(c[i]); }
+  })(feat.geometry.coordinates);
+  return [minx, miny, maxx, maxy];
+}
+
+function zoomToDept(in1) {
+  var feat = null;
+  for (var i = 0; i < currentGeoJSON.features.length; i++) {
+    if (currentGeoJSON.features[i].properties.in1 === in1) { feat = currentGeoJSON.features[i]; break; }
+  }
+  if (!feat) return;
+  var b = bboxOfFeature(feat);
+  var cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+  var maxd = Math.max(b[2] - b[0], b[3] - b[1], 1e-4);
+  var zoom = Math.max(4.2, Math.min(9, Math.log2(360 / maxd) - 1.2));
+  var dk = deckInstances[currentVid];
+  if (!dk) return;
+  var vs = { longitude: cx, latitude: cy, zoom: zoom, pitch: 45, bearing: -12, transitionDuration: 900 };
+  if (deck.FlyToInterpolator) vs.transitionInterpolator = new deck.FlyToInterpolator();
+  dk.setProps({ initialViewState: vs });
 }
 
 function findFeat(in1) {
@@ -661,15 +739,15 @@ function findFeat(in1) {
   return null;
 }
 
-// Click en un municipio -> alimenta los paneles abiertos
+// Click/búsqueda de un departamento -> panel lateral
 function selectMuni(in1) {
   if (!in1) return;
   lastClickIn1 = in1;
-  var any = false;
-  if (isOpen('float-muni')) { renderMuni(in1); any = true; }
-  if (isOpen('float-temporal')) { renderTemporal(in1); any = true; }
-  if (isOpen('float-resumen')) { renderResumen(in1); any = true; }
-  if (!any) { openFloat('muni'); }  // si no hay panel abierto, abre el resumen
+  var open = document.getElementById('side-panel').classList.contains('open');
+  // Solo actualiza si el panel YA está abierto en una consulta por-departamento; nunca lo abre solo.
+  if (open && (currentMode === 'muni' || currentMode === 'temporal' || currentMode === 'resumen')) {
+    renderPanelMode(currentMode);
+  }
 }
 
 function renderMuni(in1) {
@@ -692,7 +770,7 @@ function renderTemporal(in1) {
   var vdef = VARS[currentVid];
   var base = findFeat(in1) || {};
   if (!MONTHS.length) { el.innerHTML = '<div class="float-hint">Cargando meses&hellip;</div>'; return; }
-  var cells = MONTHS.map(function(m) {
+  var cells = MONTHS.slice().reverse().map(function(m) {   // más reciente arriba, más antiguo abajo
     var props = m.byIn1[in1];
     var val = props ? parseFloat(props[currentVid]) : NaN;
     var c = getCat(val, vdef.thresholds);
@@ -753,7 +831,7 @@ function loadAllMonths() {
         for (var in1 in s.datos) { if (s.datos[in1][lbl]) byIn1[in1] = s.datos[in1][lbl]; }
         return { label: lbl, byIn1: byIn1 };
       });
-      refreshFloats();
+      refreshPanel();
     })
     .catch(function(){ loadAllMonthsFallback(); });
 }
@@ -766,7 +844,7 @@ function loadAllMonthsFallback() {
       gj.features.forEach(function(f){ if (f.properties.in1) byIn1[f.properties.in1] = f.properties; });
       return { label: p.label, file: p.file, byIn1: byIn1 };
     });
-  })).then(function(arr){ MONTHS = arr; refreshFloats(); }).catch(function(e){ console.error('loadAllMonths', e); });
+  })).then(function(arr){ MONTHS = arr; refreshPanel(); }).catch(function(e){ console.error('loadAllMonths', e); });
 }
 
 // Arrastre de los paneles flotantes por su encabezado
@@ -871,20 +949,39 @@ function renderProv() {
   document.getElementById('prov-bot').innerHTML = '<h4>&#9660; 10 menores</h4>' + provRankRows(bot, catColor);
 }
 
-// ── Tab switching ────────────────────────────────────────────────────────────
+// Fuerza que MapLibre dimensione el basemap al contenedor (reintenta hasta lograrlo)
+function fixMapSize() {
+  var tries = 0;
+  var iv = setInterval(function() {
+    window.dispatchEvent(new Event('resize'));
+    tries++;
+    var tc = document.querySelector('.tab-content.active');
+    var c = tc && tc.querySelector('.maplibregl-canvas');
+    if ((c && c.width > 500) || tries >= 8) clearInterval(iv);
+  }, 220);
+}
+
+// ── Selección de variable ────────────────────────────────────────────────────
 function showTab(vid) {
   currentVid = vid;
-  refreshFloats();
   document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
-  document.querySelectorAll('.tab-btn').forEach(function(el){el.classList.remove('active')});
   document.getElementById('tab-'+vid).classList.add('active');
-  document.getElementById('btn-'+vid).classList.add('active');
+  document.querySelectorAll('#var-list .varitem').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-vid') === vid); });
+  renderLegend(vid);
 
   if (!initialized[vid]) {
     setTimeout(function(){
       initDeck(vid);
       initialized[vid] = true;
+      fixMapSize();  // MapLibre dimensiona el basemap al contenedor
+      refreshPanel();
     }, 80);
+  } else {
+    setTimeout(function(){
+      if (deckInstances[vid]) deckInstances[vid].redraw(true);
+      fixMapSize();
+    }, 30);
+    refreshPanel();
   }
 }
 
@@ -913,12 +1010,15 @@ function loadPeriod(file) {
 
       buildTabs();
       currentVid = VAR_IDS[0];
-      refreshFloats();
+      renderLegend(currentVid);
+      populateProvinces();
+      refreshPanel();
       // Init first tab
       setTimeout(function(){
         var first = VAR_IDS[0];
         initDeck(first);
         initialized[first] = true;
+        fixMapSize();  // basemap MapLibre al tamaño real
       }, 200);
     })
     .catch(function(err){
@@ -941,10 +1041,10 @@ window.addEventListener('DOMContentLoaded', function() {
     sel.appendChild(opt);
   });
 
-  // Load first period + todos los meses (para la evolución temporal) + arrastre de paneles
+  // Cargar primer período + todos los meses (evolución temporal) + buscador
   loadPeriod(PERIODS[0].file);
   loadAllMonths();
-  initDrags();
+  initSearch();
 });
 
 window.addEventListener('resize', function(){
