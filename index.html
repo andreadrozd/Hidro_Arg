@@ -70,13 +70,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
 .varitem.active{background:#1a3a5c;color:#fff;font-weight:700;border-color:#1a3a5c}
 .varitem .vi-ic{font-size:20px;line-height:1;flex-shrink:0}
 
-/* Control arriba-izquierda: rótulo "Menú" + botón ☰ */
-#top-ctrl{position:absolute;top:12px;left:12px;z-index:45;display:flex;flex-direction:column;align-items:center;gap:3px}
-.menu-cap{font-size:11px;font-weight:700;color:#1a3a5c;background:rgba(255,255,255,.92);padding:2px 9px;border-radius:6px;
-  box-shadow:0 1px 4px rgba(0,0,0,.15);letter-spacing:.3px}
-#menu-btn{width:44px;height:44px;border:none;border-radius:10px;background:#1a3a5c;color:#fff;font-size:20px;cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,.25);flex-shrink:0}
+/* Control arriba-izquierda: botón con ☰ + "Menú" adentro */
+#top-ctrl{position:absolute;top:12px;left:12px;z-index:45}
+#menu-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  min-width:50px;padding:7px 11px;border:none;border-radius:10px;background:#1a3a5c;color:#fff;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)}
 #menu-btn:hover{background:#2d6a9f}
+.mb-ic{font-size:20px;line-height:1}
+.mb-tx{font-size:11px;font-weight:700;letter-spacing:.4px}
 .sp-search{padding:10px 12px 11px;flex:0 0 auto;background:#fff;border-bottom:1px solid #eef1f5;position:relative;z-index:5}
 #search-wrap{position:relative}
 #search-inp{width:100%;height:42px;border:1px solid #cbd6e2;border-radius:9px;padding:0 13px;font-size:14px;outline:none}
@@ -149,12 +150,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
 /* Evolución temporal */
 .tl-head{font-size:13px;font-weight:700;color:#1a3a5c;margin-bottom:2px}
 .tl-sub{font-size:11px;color:#777;margin-bottom:9px}
-.tl-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.tl-cell{flex:0 0 auto;width:84px;text-align:center;background:#f6f8fb;border-radius:8px;padding:7px 5px}
-.tl-month{font-size:11px;color:#555;margin-bottom:5px;font-weight:600}
-.tl-chip{width:34px;height:34px;line-height:34px;margin:0 auto 5px;border-radius:8px;font-size:17px;color:#fff}
-.tl-val{font-size:13px;font-weight:700;color:#1a3a5c;font-variant-numeric:tabular-nums}
-.tl-cat{font-size:10px;color:#666;margin-top:2px}
+.tl-wrap{display:flex;flex-direction:column;gap:10px}
+.tl-cell{display:flex;align-items:center;gap:15px;background:#f6f8fb;border-radius:12px;padding:14px 16px}
+.tl-chip{width:56px;height:56px;line-height:56px;border-radius:12px;font-size:30px;color:#fff;flex-shrink:0;text-align:center}
+.tl-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tl-month{font-size:15px;color:#334155;font-weight:700}
+.tl-cat{font-size:12.5px;color:#667085}
+.tl-val{font-size:22px;font-weight:700;color:#1a3a5c;font-variant-numeric:tabular-nums;margin-left:auto;white-space:nowrap}
 
 /* Reutilizados en el panel de provincia */
 .prov-select{width:100%;padding:7px 9px;font-size:13px;border:1px solid #b9cbe0;border-radius:6px;margin-bottom:9px;color:#222}
@@ -180,8 +182,32 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
   .tab-content{padding:6px}
 }
 
+/* Textos del panel de consultas un poco más grandes (desktop) */
+.sp-mode{font-size:13.5px}
+.prov-select{font-size:14px}
+.sp-body .prov-var{font-size:13px}
+.sp-body .prov-section h4{font-size:13.5px}
+.sp-body .prov-cat-row,.sp-body .prov-rank-row{font-size:13.5px}
+.sp-body .prov-rank-val{font-size:13.5px}
+.sp-body .mu-head{font-size:15px}
+.sp-body .mu-sub{font-size:12.5px}
+.sp-body .mu-lbl{font-size:13.5px}
+.sp-body .mu-val{font-size:13.5px}
+.sp-body .mu-chip{font-size:11.5px}
+.sp-body .tl-head{font-size:15px}
+.sp-body .tl-sub{font-size:12.5px}
+.sp-body .float-hint{font-size:13.5px}
+
 /* ── MODO CELULAR ─────────────────────────────────────────────────────────── */
 @media(max-width:760px){
+  /* Header compacto que entra en el ancho del celular */
+  .header{padding:8px 10px;gap:6px}
+  .header-logo{height:38px}
+  .header-left h1{font-size:15px}
+  .header-left p{font-size:10.5px}
+  .header-select,.header-link,.header-cta{font-size:11px;padding:5px 9px}
+  .header-hint{display:none}
+
   #side-panel{width:90%;max-width:none;min-width:0}
   /* Variables: solo ícono */
   .varitem .vi-lbl{display:none}
@@ -213,12 +239,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
   .prov-rank-val{font-size:14.5px}
   .prov-sw{width:15px;height:15px}
 
-  /* Evolución temporal (vertical): tarjetas más grandes */
-  .tl-cell{width:132px;padding:12px 8px}
-  .tl-month{font-size:14.5px}
-  .tl-chip{width:46px;height:46px;line-height:46px;font-size:23px}
-  .tl-val{font-size:16.5px}
-  .tl-cat{font-size:13px}
+  /* Evolución temporal (tarjeta fila): más grande en celular */
+  .tl-cell{padding:16px 16px;gap:16px}
+  .tl-chip{width:62px;height:62px;line-height:62px;font-size:33px}
+  .tl-month{font-size:17px}
+  .tl-cat{font-size:14px}
+  .tl-val{font-size:25px}
 }
 </style>
 </head>
@@ -243,8 +269,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
   <div class="tabs-container" id="tabs-container"></div>
 
   <div id="top-ctrl">
-    <span class="menu-cap">Menú</span>
-    <button id="menu-btn" onclick="toggleSidePanel()" title="Consultas, búsqueda y estadísticas">&#9776;</button>
+    <button id="menu-btn" onclick="toggleSidePanel()" title="Consultas, búsqueda y estadísticas">
+      <span class="mb-ic">&#9776;</span><span class="mb-tx">Menú</span>
+    </button>
   </div>
 
   <div id="var-list"></div>
@@ -774,10 +801,11 @@ function renderTemporal(in1) {
     var props = m.byIn1[in1];
     var val = props ? parseFloat(props[currentVid]) : NaN;
     var c = getCat(val, vdef.thresholds);
-    return '<div class="tl-cell"><div class="tl-month">' + m.label + '</div>' +
+    return '<div class="tl-cell">' +
       '<div class="tl-chip" style="background:rgb(' + c.rgb.join(',') + ')">' + vdef.icon + '</div>' +
+      '<div class="tl-meta"><div class="tl-month">' + m.label + '</div><div class="tl-cat">' + c.cat + '</div></div>' +
       '<div class="tl-val">' + (isNaN(val) ? 's/d' : val.toFixed(2)) + '</div>' +
-      '<div class="tl-cat">' + c.cat + '</div></div>';
+      '</div>';
   }).join('');
   el.innerHTML = '<div class="tl-head">' + (base.iadepto_si || in1) +
       ' <span style="opacity:.7;font-weight:400">(' + (base.iaprov_sin || '') + ')</span></div>' +
@@ -998,8 +1026,6 @@ function loadPeriod(file) {
     .then(function(r){ return r.json(); })
     .then(function(gj){
       currentGeoJSON = gj;
-      var n = gj.features.length;
-      document.getElementById('badge-info').innerHTML = n + ' departamentos<br>7 variables';
 
       // Find label for this file
       var lbl = file;
@@ -1022,8 +1048,7 @@ function loadPeriod(file) {
       }, 200);
     })
     .catch(function(err){
-      document.getElementById('badge-info').textContent = 'Error cargando datos';
-      console.error(err);
+      console.error('Error cargando datos', err);
     });
 }
 
