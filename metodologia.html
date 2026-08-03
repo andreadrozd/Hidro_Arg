@@ -46,6 +46,7 @@ h2.sec{font-size:clamp(18px,2vw,23px);color:#1a3a5c;margin-bottom:12px;padding-b
 .b-gsmap{background:#e2eef9;color:#1d5a8c}
 .b-smap{background:#e7eafa;color:#42449c}
 .b-era5{background:#e7f3e4;color:#3a7a2c}
+.b-modis{background:#e3f0d8;color:#3f6b1e}
 h3.sub{font-size:clamp(15px,1.6vw,18px);color:#2d6a9f;margin:18px 0 6px}
 p{margin:8px 0}
 .intro{font-size:14.5px;color:#444}
@@ -101,15 +102,18 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
       <li class="grp">Infiltración (ERA5-Land)</li>
       <li><a href="#inf">6. Infiltración media mensual</a></li>
       <li><a href="#infef">7. Eficiencia de infiltración</a></li>
+      <li class="grp">Vegetación (MODIS)</li>
+      <li><a href="#ndvi">8. NDVI</a></li>
+      <li><a href="#andvi">9. Anomalía de NDVI</a></li>
       <li class="grp">Agregación temporal</li>
-      <li><a href="#resumen">8. Resumen del período</a></li>
+      <li><a href="#resumen">10. Resumen del período</a></li>
       <li class="grp">&nbsp;</li>
       <li><a href="#sintesis">Síntesis y referencias</a></li>
     </ul>
   </div>
 
   <div class="card">
-    <p class="intro">El dashboard <b>Monitoreo Hídrico — Argentina</b> presenta <b>7 variables</b> por departamento (<b>527 unidades</b>, nivel ADM2), reducidas a su valor medio zonal. Cada departamento se identifica con su <b>código INDEC</b> (campo <code>in1</code>, 5 dígitos), que permite unir los datos entre meses y filtrar por provincia. Las variables provienen de tres productos satelitales/de reanálisis, elegidos según la variable: <b>GSMaP</b> (precipitación), <b>SMAP</b> (humedad del suelo) y <b>ERA5-Land</b> (infiltración). Esta página documenta el cálculo, las unidades y los umbrales de cada una.</p>
+    <p class="intro">El dashboard <b>Monitoreo Hídrico — Argentina</b> presenta <b>9 variables</b> por departamento (<b>527 unidades</b>, nivel ADM2), reducidas a su valor medio zonal. Cada departamento se identifica con su <b>código INDEC</b> (campo <code>in1</code>, 5 dígitos), que permite unir los datos entre meses y filtrar por provincia. Las variables provienen de cuatro productos satelitales/de reanálisis, elegidos según la variable: <b>GSMaP</b> (precipitación), <b>SMAP</b> (humedad del suelo), <b>ERA5-Land</b> (infiltración) y <b>MODIS</b> (índice de vegetación NDVI). Esta página documenta el cálculo, las unidades y los umbrales de cada una.</p>
     <div class="callout"><b>Sobre los umbrales.</b> Las categorías y rangos de cada variable se calibraron originalmente en el estudio de la <b>provincia de Buenos Aires</b> (Drozd et al. 2025) y se aplican a todo el país como primera aproximación. En regiones con regímenes muy distintos (árido patagónico, subtropical del NEA) conviene interpretarlos con ese recaudo.</div>
   </div>
 
@@ -123,6 +127,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td>Precipitación (1, 2, 3)</td><td><b>GSMaP</b> (JAXA)</td><td>Kubota et al. 2020</td><td>0.1° (~11 km)</td><td>horaria</td><td>~20 h</td></tr>
         <tr><td>Humedad del suelo (4, 5)</td><td><b>SMAP</b></td><td>NSIDC SPL3SMP_E v6 · Reichle 2022</td><td>9000 m (~9 km)</td><td>diaria</td><td>—</td></tr>
         <tr><td>Infiltración (6, 7)</td><td><b>ERA5-Land</b></td><td><code>ECMWF/ERA5_LAND/DAILY_AGGR</code> · HTESSEL</td><td>0.1° (~11 km)</td><td>diaria → mensual</td><td>—</td></tr>
+        <tr><td>Vegetación · NDVI (8, 9)</td><td><b>MODIS</b> (Terra)</td><td><code>MODIS/061/MOD13A1</code></td><td>500 m</td><td>compuesto 16 días</td><td>—</td></tr>
       </tbody>
     </table>
     <ul style="margin:8px 0 0 22px;font-size:13.5px">
@@ -275,10 +280,53 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
     </div>
   </div>
 
-  <!-- 8 RESUMEN DEL PERÍODO -->
+  <!-- 8 NDVI -->
+  <div class="card" id="ndvi">
+    <h2 class="sec">🌿 8. NDVI &mdash; Índice de Vegetación <code>ndvi_mean</code> <span class="srcbadge b-modis">MODIS</span></h2>
+    <p><b>Definición.</b> El <b>NDVI</b> (Índice de Vegetación de Diferencia Normalizada) mide el vigor y la densidad de la vegetación verde a partir de la reflectancia en el rojo e infrarrojo cercano. Varía de −1 a 1: valores altos indican vegetación densa y sana; cercanos a 0, suelo desnudo o vegetación escasa; negativos, cuerpos de agua.</p>
+    <p><b>Cálculo.</b> Del producto MODIS <code>MODIS/061/MOD13A1</code> (satélite Terra, compuesto cada 16 días, 500 m) se toma la banda NDVI y se <b>promedia sobre el último mes y medio</b>, reduciéndolo a la media zonal de cada departamento.</p>
+    <div class="formula">ndvi_mean = media del NDVI (MODIS MOD13A1) del último mes y medio</div>
+    <p><b>Unidad:</b> índice adimensional (rango −1 a 1).</p>
+    <table>
+      <thead><tr><th>Categoría</th><th>Rango</th><th>Interpretación</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="background:#2b83ba"></span>Con agua</td><td>&lt; 0</td><td>Cuerpos de agua / anegamiento</td></tr>
+        <tr><td><span class="sw" style="background:#c18c4f"></span>Vegetación nula a escasa</td><td>0 – 0.3</td><td>Suelo desnudo o vegetación rala</td></tr>
+        <tr><td><span class="sw" style="background:#c7d76f"></span>Vegetación poco frondosa</td><td>0.3 – 0.6</td><td>Cobertura vegetal moderada</td></tr>
+        <tr><td><span class="sw" style="background:#5ab43c"></span>Vegetación frondosa</td><td>0.6 – 0.75</td><td>Vegetación densa y activa</td></tr>
+        <tr><td><span class="sw" style="background:#1a7832"></span>Muy frondosa</td><td>&gt; 0.75</td><td>Vegetación muy densa / vigor máximo</td></tr>
+      </tbody>
+    </table>
+    <p><b>Interpretación.</b> Refleja el estado de la cobertura vegetal (cultivos, pastizales, bosques) y detecta zonas anegadas (NDVI negativo). Complementa a la humedad del suelo: la vegetación integra la disponibilidad de agua a lo largo del tiempo.</p>
+  </div>
+
+  <!-- 9 ANDVI -->
+  <div class="card" id="andvi">
+    <h2 class="sec">🍃 9. Anomalía de NDVI <code>Andvi_mean</code> <span class="srcbadge b-modis">MODIS</span></h2>
+    <p><b>Definición.</b> Desvío del NDVI del período respecto a su comportamiento normal, <b>estandarizado por el rango de variación histórica</b> (mismo criterio que la anomalía de precipitación).</p>
+    <p><b>Cálculo.</b> Con la serie MODIS del <b>mismo período del año entre 2018 y 2024</b> se estiman la media y el rango (máximo − mínimo) del NDVI. La anomalía sigue la <b>Ecuación 1</b>:</p>
+    <div class="formula">ANDVI = (NDVIo − NDVIm) / Rango
+      <span class="eq">NDVIo = NDVI observado · NDVIm = media histórica (2018–2024) · Rango = máximo − mínimo</span>
+    </div>
+    <div class="callout">La climatología 2018–2024 (media y rango) se calcula sobre el <b>NDVI de MODIS</b>, independiente de la climatología de precipitación (GSMaP, 2000–2023).</div>
+    <p><b>Unidad:</b> adimensional.</p>
+    <table>
+      <thead><tr><th>Categoría</th><th>Rango</th><th>Interpretación</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="background:#8c510a"></span>Alta disminución</td><td>&lt; −0.8</td><td>Fuerte pérdida de vegetación respecto a lo normal</td></tr>
+        <tr><td><span class="sw" style="background:#d8b365"></span>Disminución</td><td>−0.8 – −0.5</td><td>Vegetación por debajo de lo normal</td></tr>
+        <tr><td><span class="sw" style="background:#b2c4a6"></span>Variación normal</td><td>−0.5 – 0.5</td><td>Dentro de la variabilidad esperable</td></tr>
+        <tr><td><span class="sw" style="background:#78c679"></span>Aumento</td><td>0.5 – 0.8</td><td>Vegetación por encima de lo normal</td></tr>
+        <tr><td><span class="sw" style="background:#1a7832"></span>Alto aumento</td><td>&gt; 0.8</td><td>Fuerte incremento del vigor de la vegetación</td></tr>
+      </tbody>
+    </table>
+    <p><b>Interpretación.</b> El cero es la referencia normal: positivos = vegetación más vigorosa que la media histórica (mejores condiciones hídricas); negativos = pérdida de vegetación (estrés, sequía o cosecha). Al estar estandarizada por el rango, es comparable entre departamentos con distinta cobertura.</p>
+  </div>
+
+  <!-- 10 RESUMEN DEL PERÍODO -->
   <div class="card" id="resumen">
-    <h2 class="sec">🧮 8. Resumen del período</h2>
-    <p><b>Definición.</b> Consulta del dashboard que, para un departamento seleccionado, <b>agrega las 7 variables sobre todos los meses cargados</b> (por ejemplo un semestre o un año) y devuelve una síntesis del estado hídrico del período. La forma de agregar depende de la naturaleza de cada variable.</p>
+    <h2 class="sec">🧮 10. Resumen del período</h2>
+    <p><b>Definición.</b> Consulta del dashboard que, para un departamento seleccionado, <b>agrega las 9 variables sobre todos los meses cargados</b> (por ejemplo un semestre o un año) y devuelve una síntesis del estado hídrico del período. La forma de agregar depende de la naturaleza de cada variable.</p>
     <table>
       <thead><tr><th>Variable</th><th>Agregación en el período</th><th>Por qué</th></tr></thead>
       <tbody>
@@ -289,6 +337,8 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td><code>Hum_mean</code> · Humedad del suelo</td><td><b>Media</b></td><td>Estado hídrico promedio del suelo en el período.</td></tr>
         <tr><td><code>InfEf_mean</code> · Eficiencia de infiltración</td><td><b>Media</b></td><td>Proporción media de la lluvia incorporada al suelo.</td></tr>
         <tr><td><code>AHum_mean</code> · Anomalía de humedad del suelo</td><td><b>Última estimación</b></td><td>La humedad del suelo es un proceso acumulativo; la anomalía refleja el estado <b>resultante</b> del agua en el suelo superficial, por lo que se toma la medición <b>más reciente</b> del período, no su promedio.</td></tr>
+        <tr><td><code>ndvi_mean</code> · NDVI</td><td><b>Media</b></td><td>Verdor promedio de la vegetación a lo largo del período.</td></tr>
+        <tr><td><code>Andvi_mean</code> · Anomalía de NDVI</td><td><b>Última estimación</b></td><td>Estado más reciente del vigor de la vegetación respecto a lo normal (mismo criterio que la anomalía de humedad).</td></tr>
       </tbody>
     </table>
     <div class="callout warn"><b>Categorías de color.</b> Los umbrales de cada variable están definidos para valores <b>mensuales</b>. En el resumen, las variables con <b>media</b> o <b>última estimación</b> conservan el chip de categoría con su color (misma escala mensual); las variables <b>acumuladas</b> (suma) se muestran con un chip neutro «Σ acumulado» y <b>sin color de categoría</b>, porque el valor sumado no es comparable con los umbrales mensuales.</div>
@@ -307,6 +357,8 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
         <tr><td>5</td><td><code>AHum_mean</code></td><td>SMAP · <code>soil_moisture_am_anomaly</code></td><td>media mensual (banda del producto)</td><td>m³/m³</td></tr>
         <tr><td>6</td><td><code>inf_mean</code></td><td>ERA5-Land · ppt − esc. sup. + evap.</td><td>balance mensual</td><td>mm</td></tr>
         <tr><td>7</td><td><code>InfEf_mean</code></td><td>ERA5-Land · inf / ppt</td><td>ratio mensual</td><td>adim</td></tr>
+        <tr><td>8</td><td><code>ndvi_mean</code></td><td>MODIS · <code>MOD13A1</code> (NDVI)</td><td>media del último mes y medio</td><td>índice</td></tr>
+        <tr><td>9</td><td><code>Andvi_mean</code></td><td>MODIS · climatología 2018–2024</td><td>(NDVIo − NDVIm)/Rango (Ec. 1)</td><td>adim</td></tr>
       </tbody>
     </table>
 
@@ -316,6 +368,7 @@ code{background:#eef1f5;border-radius:4px;padding:1px 5px;font-family:'Consolas'
       <li>Kubota, T., et al. (2020). <em>Global Satellite Mapping of Precipitation (GSMaP) products in the GPM era.</em> Springer.</li>
       <li>Reichle, R. H., et al. (2022). <em>SMAP L3/L4 Global 9 km EASE-Grid Soil Moisture, v6/7.</em> NASA NSIDC DAAC.</li>
       <li>Muñoz-Sabater, J., et al. (2021). <em>ERA5-Land: a state-of-the-art global reanalysis dataset for land applications.</em> ESSD.</li>
+      <li>Didan, K. (2021). <em>MODIS/Terra Vegetation Indices 16-Day L3 Global 500 m SIN Grid (MOD13A1 v061).</em> NASA LP DAAC.</li>
       <li>Varni, M. y Custodio, E. (2013). Recarga al acuífero Pampeano, Azul (SEDICI-UNLP). Recarga efectiva regional: 7–26 % de la precipitación.</li>
     </ul>
   </div>

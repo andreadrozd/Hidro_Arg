@@ -318,6 +318,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#eef1f5;color:#222;displ
 var DATA_DIR = 'data/';
 
 var PERIODS = [
+  {file: 'Arg_Hidro_202607.geojson', label: 'Julio 2026'},
   {file: 'Arg_Hidro_202606.geojson', label: 'Junio 2026'},
   {file: 'Arg_Hidro_202605.geojson', label: 'Mayo 2026'},
   {file: 'Arg_Hidro_202604.geojson', label: 'Abril 2026'},
@@ -376,6 +377,22 @@ var VARS = {
       {cat:'Buena',      rgb:[116,173,209], range:'0.15 – 0.22',   test:function(v){return v>0.15&&v<=0.22}},
       {cat:'Muy buena',  rgb:[33,102,172],  range:'> 0.22',        test:function(v){return v>0.22}},
     ], vmin:0, vmax:0.3},
+  ndvi_mean: {label:'NDVI - Índice de Vegetación', unit:'(índice)', icon:'\u{1F33F}',
+    thresholds:[
+      {cat:'Con agua',                 rgb:[43,131,186],  range:'< 0',         test:function(v){return v<0}},
+      {cat:'Vegetación nula a escasa', rgb:[193,140,79],  range:'0 – 0.3',     test:function(v){return v>=0&&v<0.3}},
+      {cat:'Vegetación poco frondosa', rgb:[199,215,111], range:'0.3 – 0.6',   test:function(v){return v>=0.3&&v<0.6}},
+      {cat:'Vegetación frondosa',      rgb:[90,180,60],   range:'0.6 – 0.75',  test:function(v){return v>=0.6&&v<=0.75}},
+      {cat:'Muy frondosa',             rgb:[26,120,50],   range:'> 0.75',      test:function(v){return v>0.75}},
+    ], vmin:-0.2, vmax:0.9},
+  Andvi_mean: {label:'Anomalía de NDVI', unit:'(adim.)', icon:'\u{1F343}',
+    thresholds:[
+      {cat:'Alta disminución', rgb:[140,81,10],   range:'< −0.8',       test:function(v){return v<-0.8}},
+      {cat:'Disminución',      rgb:[216,179,101], range:'−0.8 – −0.5',  test:function(v){return v>=-0.8&&v<-0.5}},
+      {cat:'Variación normal', rgb:[178,196,166], range:'−0.5 – 0.5',   test:function(v){return v>=-0.5&&v<=0.5}},
+      {cat:'Aumento',          rgb:[120,198,121], range:'0.5 – 0.8',    test:function(v){return v>0.5&&v<=0.8}},
+      {cat:'Alto aumento',     rgb:[26,120,50],   range:'> 0.8',        test:function(v){return v>0.8}},
+    ], vmin:-1, vmax:1},
 };
 
 var VAR_IDS = Object.keys(VARS);
@@ -399,7 +416,8 @@ var lastClickIn1 = null;
 var MONTHS = [];
 // Agregación por variable para el "Resumen del período": 'sum', 'mean' o 'last' (última estimación)
 var AGG = {ppt_mean:'sum', APPT_mean:'sum', Tppt_mean:'mean', Hum_mean:'mean',
-           AHum_mean:'last', inf_mean:'sum', InfEf_mean:'mean'};
+           AHum_mean:'last', inf_mean:'sum', InfEf_mean:'mean',
+           ndvi_mean:'mean', Andvi_mean:'last'};
 
 // ── Logos (base64) ───────────────────────────────────────────────────────────
 function loadLogos() {
