@@ -274,6 +274,25 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
   #views,.view.page{position:static;overflow:visible}
   #view-ficha{display:block!important}
 }
+.d-row .val{width:auto;min-width:96px;white-space:nowrap}
+.leg-act{display:flex;align-items:center;gap:10px;margin-left:auto}
+.leg-toggle{width:30px;height:30px;border:1px solid #C5CFD3;border-radius:6px;background:#fff;color:var(--mut2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.leg-toggle:hover{background:#EEF1F0}
+.leg-strip{display:none;gap:2px;align-items:center}
+.leg-strip i{display:block;width:22px;height:10px;border-radius:2px}
+.legend.min{flex:0 1 auto;padding:8px 14px 8px 10px;gap:0}
+.legend-h{justify-content:flex-start!important;align-items:center!important;gap:10px!important}
+.legend.min .legend-g,.legend.min .note,.legend.min .legend-h a,.legend.min .legend-h b span{display:none}
+.legend.min .leg-strip{display:flex}
+.legend.min .legend-h{flex-wrap:nowrap;align-items:center;gap:12px}
+.legend.min .legend-h b{font-size:13px;white-space:nowrap}
+.ptag{font-family:var(--mono);font-size:11px;color:var(--mut);margin-left:4px;font-weight:400}
+.medline{font-size:13px;color:var(--mut2)}
+.medline b{font-family:var(--mono);color:var(--txt)}
+.bc .bar i.med{border-radius:0;position:absolute;left:-3px;right:-3px;border-top:2px solid #14202A;opacity:.8}
+.bc .band{position:absolute;left:0;right:0;border-top:1px dashed #A9B4B8}
+.bc .band span{position:absolute;right:0;top:-14px;font-family:var(--mono);font-size:10px;color:var(--mut2);background:rgba(255,255,255,.85);padding:0 2px}
+table.mx td small{display:block;font-size:10px;opacity:.85;font-weight:400}
 </style>
 </head>
 <body>
@@ -282,7 +301,7 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
   <img id="logo-cyano" class="logo-c" alt="CyanoSat">
   <div class="brand">
     <b>Monitor Hídrico Satelital · Argentina</b>
-    <span>527 departamentos · ERA5-Land, MODIS · actualización mensual</span>
+    <span>527 departamentos · ERA5-Land y MODIS · anomalías en percentiles 2001–2025</span>
   </div>
   <div class="spacer"></div>
   <nav class="nav" aria-label="Secciones">
@@ -293,7 +312,7 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
   <label class="period" for="period-select">
     <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
     <span>Período</span>
-    <select id="period-select" onchange="loadPeriod(+this.value)"></select>
+    <select id="period-select" onchange="loadMonth(+this.value)"></select>
   </label>
   <a id="appfloods-link" class="btn-teal" target="_blank" rel="noopener"><span class="t">Abrir</span> AppFloods
     <svg class="ico" style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
@@ -309,7 +328,7 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
         <label class="fld-lbl" for="search-inp">Buscar departamento</label>
         <div class="search-box">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#5A6A75" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="search-inp" type="text" placeholder="Ej.: La Plata, Villaguay…" autocomplete="off">
+          <input id="search-inp" type="text" placeholder="Ej.: La Plata, Federación…" autocomplete="off">
         </div>
         <div id="search-sug" class="sug" role="listbox"></div>
       </div>
@@ -320,7 +339,7 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
     <main id="mapwrap" aria-label="Mapa">
       <div id="map"></div>
       <div id="hover"></div>
-      <div id="loading" class="loading">Cargando período…</div>
+      <div id="loading" class="loading on">Cargando datos…</div>
       <div id="toast" class="loading" role="status" aria-live="polite"></div>
       <div class="ctrl">
         <div class="seg" role="group" aria-label="Modo de vista">
@@ -374,8 +393,8 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
           <div class="rk-list" id="pn-rk"></div>
         </section>
         <div class="side">
-          <section class="box" style="gap:6px"><div class="box-h" style="margin-bottom:6px"><h2>10 mayores valores</h2></div><div id="pn-top"></div></section>
-          <section class="box" style="gap:6px"><div class="box-h" style="margin-bottom:6px"><h2>10 menores valores</h2></div><div id="pn-bot"></div></section>
+          <section class="box" style="gap:6px"><div class="box-h" style="margin-bottom:6px"><h2>10 percentiles más altos</h2></div><div id="pn-top"></div></section>
+          <section class="box" style="gap:6px"><div class="box-h" style="margin-bottom:6px"><h2>10 percentiles más bajos</h2></div><div id="pn-bot"></div></section>
           <section class="box"><div class="box-h"><h2>Departamentos por categoría</h2></div><div id="pn-dist"></div></section>
         </div>
       </div>
@@ -399,101 +418,49 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
 // Configuración
 // ═════════════════════════════════════════════════════════════════════════════
 var DATA_DIR = 'data/';
+var PREFIJO = 'Hidro_Arg_';               // archivos mensuales: data/Hidro_Arg_AAAAMM.csv
+var INICIO = {anio: 2026, mes: 1};        // primer mes a buscar; la app descubre sola los CSV que existan
 var APPFLOODS_URL = 'https://cyanosat.envsat.com/monitoreo-hidrico-app-floods/';
+var BASE_TXT = '2001–2025';
 
-// Más reciente primero. Para sumar un mes: agregar una línea arriba y correr make_series.py
-var PERIODS = [
-  {file: 'Arg_Hidro_202609.geojson', label: 'Septiembre 2026'},
-  {file: 'Arg_Hidro_202608.geojson', label: 'Agosto 2026'},
-  {file: 'Arg_Hidro_202607.geojson', label: 'Julio 2026'},
-  {file: 'Arg_Hidro_202606.geojson', label: 'Junio 2026'},
-  {file: 'Arg_Hidro_202605.geojson', label: 'Mayo 2026'},
-  {file: 'Arg_Hidro_202604.geojson', label: 'Abril 2026'},
-  {file: 'Arg_Hidro_202603.geojson', label: 'Marzo 2026'},
-  {file: 'Arg_Hidro_202602.geojson', label: 'Febrero 2026'},
-  {file: 'Arg_Hidro_202601.geojson', label: 'Enero 2026'},
+var MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// Categorías por percentil (mismos cortes que el script de GEE)
+var CATS = [
+  {cat:'Muy bajo', range:'< p10'},
+  {cat:'Bajo',     range:'p10 – p30'},
+  {cat:'Normal',   range:'p30 – p70'},
+  {cat:'Alto',     range:'p70 – p90'},
+  {cat:'Muy alto', range:'> p90'}
 ];
+function catIndex(p){ return p < 10 ? 0 : p < 30 ? 1 : p <= 70 ? 2 : p <= 90 ? 3 : 4; }
 
-// Paleta sobria: agua = marrón → arena → celeste → azul ; vegetación = marrón → arena → verde claro → verde
-var C = {
-  def:[140,81,10], ocre:[216,179,101], arena:[216,201,155], crema:[233,225,200],
-  celeste:[107,174,214], azul:[33,102,172], verdeC:[166,217,106], verde:[26,150,65], nd:[190,198,202]
+// Paletas (de "muy bajo" a "muy alto"); varían en luminosidad para leerse también con daltonismo
+var PAL = {
+  agua: [[140,81,10],[216,179,101],[224,214,186],[107,174,214],[33,102,172]],   // seco → húmedo
+  temp: [[33,102,172],[146,197,222],[224,214,186],[244,165,130],[178,24,43]],   // frío → cálido
+  veg:  [[140,81,10],[216,179,101],[224,214,186],[166,217,106],[26,150,65]]     // menor → mayor productividad
 };
+var ND = [190,198,202];
 
 var GROUPS = [
-  {id:'ppt',  label:'Precipitación', vars:['ppt_mean','APPT_mean','Tppt_mean']},
-  {id:'suelo',label:'Suelo',         vars:['Hum_mean','AHum_mean','inf_mean','InfEf_mean']},
-  {id:'veg',  label:'Vegetación',    vars:['ndvi_mean','Andvi_mean']}
+  {label:'Precipitación y temperatura', vars:['ppt','t2m']},
+  {label:'Suelo',                       vars:['sm28','sm289']},
+  {label:'Vegetación',                  vars:['npp']}
 ];
-
-// agg: cómo se resume el período ('sum' acumulado, 'mean' media, 'last' última estimación)
+// agg: cómo se resume el período en la ficha ('sum' acumulado, 'mean' media, 'last' último mes)
 var VARS = {
-  ppt_mean:  {label:'Precipitación acumulada', short:'Acumulada mensual', unit:'mm', dec:1, agg:'sum', vmin:0, vmax:210, cuts:[70,150,200],
-    thresholds:[
-      {cat:'Bajo',              rgb:C.def,     range:'< 70',       test:function(v){return v<70}},
-      {cat:'Satisfactorio',     rgb:C.arena,   range:'70 – 150',   test:function(v){return v>=70&&v<=150}},
-      {cat:'Levemente elevado', rgb:C.celeste, range:'150 – 200',  test:function(v){return v>150&&v<=200}},
-      {cat:'Elevado',           rgb:C.azul,    range:'> 200',      test:function(v){return v>200}}]},
-  APPT_mean: {label:'Anomalía de precipitación', short:'Anomalía', unit:'adim.', dec:2, agg:'sum', vmin:-0.6, vmax:1.4, cuts:[-0.5,0.5,1.0],
-    thresholds:[
-      {cat:'Déficit',     rgb:C.def,     range:'< −0,5',      test:function(v){return v<-0.5}},
-      {cat:'Normal',      rgb:C.arena,   range:'−0,5 – 0,5',  test:function(v){return v>=-0.5&&v<=0.5}},
-      {cat:'Leve exceso', rgb:C.celeste, range:'0,5 – 1,0',   test:function(v){return v>0.5&&v<=1.0}},
-      {cat:'Exceso',      rgb:C.azul,    range:'> 1,0',       test:function(v){return v>1.0}}]},
-  Tppt_mean: {label:'Tasa media en días de lluvia', short:'Tasa en días de lluvia', unit:'mm/día', dec:1, agg:'mean', vmin:0, vmax:95, cuts:[5,13,20],
-    thresholds:[
-      {cat:'Bajo',           rgb:C.def,     range:'< 5',      test:function(v){return v<5}},
-      {cat:'Satisfactorio',  rgb:C.arena,   range:'5 – 13',   test:function(v){return v>=5&&v<=13}},
-      {cat:'Levemente alto', rgb:C.celeste, range:'13 – 20',  test:function(v){return v>13&&v<=20}},
-      {cat:'Elevado',        rgb:C.azul,    range:'> 20',     test:function(v){return v>20}}]},
-  Hum_mean:  {label:'Humedad del suelo media', short:'Humedad del suelo', unit:'m³/m³', dec:2, agg:'mean', vmin:0.15, vmax:0.42, cuts:[0.25,0.38],
-    thresholds:[
-      {cat:'Bajo',          rgb:C.def,   range:'< 0,25',       test:function(v){return v<0.25}},
-      {cat:'Satisfactorio', rgb:C.arena, range:'0,25 – 0,38',  test:function(v){return v>=0.25&&v<=0.38}},
-      {cat:'Elevado',       rgb:C.azul,  range:'> 0,38',       test:function(v){return v>0.38}}]},
-  AHum_mean: {label:'Anomalía de humedad del suelo', short:'Anomalía de humedad', unit:'adim.', dec:3, agg:'last', vmin:-0.11, vmax:0.07, cuts:[-0.05,0.05],
-    // Sin dato = suelo sobresaturado con agua en superficie: la anomalía no se estima
-    nodata:{cat:'Sin estimar (suelo saturado)', rgb:[11,45,82], range:'agua en superficie'},
-    thresholds:[
-      {cat:'Déficit', rgb:C.def,   range:'< −0,05',        test:function(v){return v<-0.05}},
-      {cat:'Normal',  rgb:C.arena, range:'−0,05 – 0,05',   test:function(v){return v>=-0.05&&v<=0.05}},
-      {cat:'Exceso',  rgb:C.azul,  range:'> 0,05',         test:function(v){return v>0.05}}]},
-  inf_mean:  {label:'Infiltración acumulada media', short:'Infiltración acumulada', unit:'mm', dec:1, agg:'sum', vmin:0, vmax:37, cuts:[0,5,10,20],
-    thresholds:[
-      {cat:'Déficit',   rgb:C.def,     range:'< 0',      test:function(v){return v<0}},
-      {cat:'Baja',      rgb:C.ocre,    range:'0 – 5',    test:function(v){return v>=0&&v<5}},
-      {cat:'Aceptable', rgb:C.crema,   range:'5 – 10',   test:function(v){return v>=5&&v<=10}},
-      {cat:'Buena',     rgb:C.celeste, range:'10 – 20',  test:function(v){return v>10&&v<=20}},
-      {cat:'Muy buena', rgb:C.azul,    range:'> 20',     test:function(v){return v>20}}]},
-  InfEf_mean:{label:'Eficiencia de infiltración (Inf/PPT)', short:'Eficiencia de infiltración', unit:'Inf/PPT', dec:2, agg:'mean', vmin:0, vmax:0.3, cuts:[0,0.07,0.15,0.22],
-    thresholds:[
-      {cat:'Déficit',   rgb:C.def,     range:'< 0',           test:function(v){return v<0}},
-      {cat:'Baja',      rgb:C.ocre,    range:'0 – 0,07',      test:function(v){return v>=0&&v<0.07}},
-      {cat:'Aceptable', rgb:C.crema,   range:'0,07 – 0,15',   test:function(v){return v>=0.07&&v<=0.15}},
-      {cat:'Buena',     rgb:C.celeste, range:'0,15 – 0,22',   test:function(v){return v>0.15&&v<=0.22}},
-      {cat:'Muy buena', rgb:C.azul,    range:'> 0,22',        test:function(v){return v>0.22}}]},
-  ndvi_mean: {label:'NDVI — Índice de vegetación', short:'NDVI', unit:'índice', dec:2, agg:'mean', vmin:-0.2, vmax:0.9, cuts:[0,0.3,0.6,0.75],
-    thresholds:[
-      {cat:'Con agua',                 rgb:C.azul,   range:'< 0',          test:function(v){return v<0}},
-      {cat:'Vegetación nula a escasa', rgb:C.def,    range:'0 – 0,3',      test:function(v){return v>=0&&v<0.3}},
-      {cat:'Vegetación poco frondosa', rgb:C.arena,  range:'0,3 – 0,6',    test:function(v){return v>=0.3&&v<0.6}},
-      {cat:'Vegetación frondosa',      rgb:C.verdeC, range:'0,6 – 0,75',   test:function(v){return v>=0.6&&v<=0.75}},
-      {cat:'Muy frondosa',             rgb:C.verde,  range:'> 0,75',       test:function(v){return v>0.75}}]},
-  Andvi_mean:{label:'Anomalía de NDVI', short:'Anomalía de NDVI', unit:'adim.', dec:2, agg:'last', vmin:-1, vmax:1, cuts:[-0.7,-0.3,0.3,0.7],
-    thresholds:[
-      {cat:'Alta disminución', rgb:C.def,    range:'< −0,7',        test:function(v){return v<-0.7}},
-      {cat:'Disminución',      rgb:C.ocre,   range:'−0,7 – −0,3',   test:function(v){return v>=-0.7&&v<-0.3}},
-      {cat:'Variación normal', rgb:C.crema,  range:'−0,3 – 0,3',    test:function(v){return v>=-0.3&&v<=0.3}},
-      {cat:'Aumento',          rgb:C.verdeC, range:'0,3 – 0,7',     test:function(v){return v>0.3&&v<=0.7}},
-      {cat:'Alto aumento',     rgb:C.verde,  range:'> 0,7',         test:function(v){return v>0.7}}]}
+  ppt:   {label:'Precipitación total',               short:'Precipitación',      unit:'mm',     dec:1, pal:'agua', agg:'sum',  meto:'ppt'},
+  t2m:   {label:'Temperatura media a 2 m',           short:'Temperatura a 2 m',  unit:'°C',     dec:1, pal:'temp', agg:'mean', meto:'t2m'},
+  sm28:  {label:'Humedad del suelo 7–28 cm',         short:'Humedad 7–28 cm',    unit:'m³/m³',  dec:3, pal:'agua', agg:'mean', meto:'sm28'},
+  sm289: {label:'Humedad del suelo 100–289 cm',      short:'Humedad 100–289 cm', unit:'m³/m³',  dec:3, pal:'agua', agg:'last', meto:'sm289'},
+  npp:   {label:'Productividad (fotosíntesis neta)', short:'Productividad',      unit:'gC/m²',  dec:1, pal:'veg',  agg:'sum',  meto:'npp'}
 };
 var VAR_IDS = Object.keys(VARS);
-// Sección de metodologia.html para cada variable
-var METO_ID = {ppt_mean:'ppt', APPT_mean:'appt', Tppt_mean:'tppt', Hum_mean:'hum', AHum_mean:'ahum', inf_mean:'inf', InfEf_mean:'infef', ndvi_mean:'ndvi', Andvi_mean:'andvi'};
 
-// Nombres de provincia con tildes (los datos vienen sin)
-var PROV_ES = {'Entre Rios':'Entre Ríos','Cordoba':'Córdoba','Neuquen':'Neuquén','Rio Negro':'Río Negro','Tucuman':'Tucumán',
-  'Ciudad Autonoma de Buenos Aires':'CABA','Tierra del Fuego, Antartida e Islas del Atlantico Sur':'Tierra del Fuego'};
+// Lectura de cada categoría: siempre relativa al valor normal del mes (mediana 2001–2025)
+var WORDS      = ['Muy por debajo', 'Por debajo', 'Normal', 'Por encima', 'Muy por encima'];
+var WORDS_LONG = ['Muy por debajo de lo normal', 'Por debajo de lo normal', 'Normal', 'Por encima de lo normal', 'Muy por encima de lo normal'];
 
 var MAX_ELEVATION = 80000;
 var VIEW0 = {longitude:-64.5, latitude:-40.0, zoom:3.7, pitch:45, bearing:-12};
@@ -502,9 +469,10 @@ var VIEW0 = {longitude:-64.5, latitude:-40.0, zoom:3.7, pitch:45, bearing:-12};
 // Estado
 // ═════════════════════════════════════════════════════════════════════════════
 var S = {
-  vid: 'ppt_mean', pIdx: 0, gj: null, byIn1: {}, cache: {},
-  months: [], sel: null, view: 'mapa', mode3d: true, vs: Object.assign({}, VIEW0),
-  prov: '', playTimer: null, loadToken: 0, userPos: null
+  vid:'ppt', months:[], mIdx:-1, geo:null, feat:{}, names:{},
+  sel:null, view:'mapa', mode3d:true, vs:Object.assign({}, VIEW0),
+  prov:'', playTimer:null, userPos:null,
+  legendMin: (function(){ try { var v = localStorage.getItem('legendMin'); if (v !== null) return v === '1'; } catch(e){} return window.matchMedia('(max-width:760px)').matches; })()
 };
 var deckgl = null;
 
@@ -513,26 +481,31 @@ var deckgl = null;
 // ═════════════════════════════════════════════════════════════════════════════
 function $(id){ return document.getElementById(id); }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function num(x){ var v = parseFloat(x); return isNaN(v) ? NaN : v; }
+function num(x){ if (x === '' || x == null) return NaN; var v = parseFloat(x); return isNaN(v) ? NaN : v; }
 function fmt(v, dec){ return isNaN(v) ? 's/d' : v.toLocaleString('es-AR', {minimumFractionDigits:dec, maximumFractionDigits:dec}).replace('-', '−'); }
-function fmtU(v, vdef){ return isNaN(v) ? 's/d' : fmt(v, vdef.dec) + (vdef.unit === 'adim.' || vdef.unit === 'índice' || vdef.unit === 'Inf/PPT' ? '' : ' ' + vdef.unit); }
+function fmtU(v, d){ return isNaN(v) ? 's/d' : fmt(v, d.dec) + ' ' + d.unit; }
 function rgb(a){ return 'rgb(' + a.join(',') + ')'; }
 function textOn(a){ var L = (0.299*a[0] + 0.587*a[1] + 0.114*a[2]) / 255; return L > 0.55 ? '#14202A' : '#FFFFFF'; }
-function provName(p){ return PROV_ES[p] || p || ''; }
-function getCat(v, vdef){
-  if (isNaN(v)) return vdef.nodata || {cat:'Sin datos', rgb:C.nd};
-  for (var i = 0; i < vdef.thresholds.length; i++) if (vdef.thresholds[i].test(v)) return vdef.thresholds[i];
-  return {cat:'Sin datos', rgb:C.nd};
-}
-function chip(c){ return '<span class="chip" style="background:' + rgb(c.rgb) + ';color:' + textOn(c.rgb) + '">' + esc(c.cat) + '</span>'; }
-function normElev(v, vdef){
-  if (isNaN(v)) return 0.03;
-  return Math.max(0.05, Math.min(1, (v - vdef.vmin) / (vdef.vmax - vdef.vmin)));
-}
+function sinTilde(s){ return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 function isMobile(){ return window.matchMedia('(max-width:760px)').matches; }
-function shortMonth(lbl){ return (lbl || '').substring(0, 3).toUpperCase(); }
-function chrono(){ return PERIODS.map(function(p, i){ return {p:p, i:i}; }).reverse(); }  // ascendente
-function curLabel(){ return PERIODS[S.pIdx].label; }
+function cur(){ return S.months[S.mIdx]; }
+function curLabel(){ return cur() ? cur().label : ''; }
+function row(in1, m){ m = m || cur(); return m && m.rows[in1] || null; }
+function val(in1, vid, m){ var r = row(in1, m); return r ? num(r[vid]) : NaN; }
+function pct(in1, vid, m){ var r = row(in1, m); return r ? num(r[vid + '_p']) : NaN; }
+function med(in1, vid, m){ var r = row(in1, m); return r ? num(r[vid + '_med']) : NaN; }
+function catOf(p, vid){
+  if (isNaN(p)) return {i:-1, cat:'Sin datos', word:'Sin datos', rgb:ND};
+  var i = catIndex(p), d = VARS[vid];
+  return {i:i, cat:CATS[i].cat, word:WORDS_LONG[i], short:WORDS[i], rgb:PAL[d.pal][i], range:CATS[i].range};
+}
+function chip(c, p){
+  return '<span class="chip" style="background:' + rgb(c.rgb) + ';color:' + textOn(c.rgb) + '">' + esc(c.word) +
+    (isNaN(p) ? '' : ' · p' + Math.round(p)) + '</span>';
+}
+function nameOf(in1){ var n = S.names[in1]; return n ? n.n : in1; }
+function provOf(in1){ var n = S.names[in1]; return n ? n.p : ''; }
+function shortMonth(m){ var s = MESES_ES[m.mes - 1].substring(0, 3).toUpperCase(); return S.multiYear ? s + '·' + String(m.anio).slice(-2) : s; }
 function ICON(name){
   var P = {
     play:'<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>',
@@ -555,6 +528,27 @@ function downloadText(name, text){
 }
 function csvCell(s){ s = String(s == null ? '' : s); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 
+// CSV simple con soporte de comillas
+function parseCSV(text){
+  text = text.replace(/^﻿/, '');
+  var rows = [], rowA = [], f = '', q = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i+1] === '"') { f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { rowA.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i+1] === '\n') i++;
+      rowA.push(f); f = ''; if (rowA.length > 1 || rowA[0] !== '') rows.push(rowA); rowA = [];
+    } else f += c;
+  }
+  if (f !== '' || rowA.length) { rowA.push(f); rows.push(rowA); }
+  var head = rows.shift() || [];
+  return rows.map(function(r){ var o = {}; head.forEach(function(h, k){ o[h.trim()] = (r[k] || '').trim(); }); return o; });
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // Logos
 // ═════════════════════════════════════════════════════════════════════════════
@@ -562,6 +556,45 @@ function loadLogo(imgId, b64file, pngFile){
   fetch(b64file).then(function(r){ if (!r.ok) throw 0; return r.text(); })
     .then(function(b64){ $(imgId).src = 'data:image/png;base64,' + b64.trim(); })
     .catch(function(){ $(imgId).src = pngFile; });
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Carga de datos
+// ═════════════════════════════════════════════════════════════════════════════
+function candidatos(){
+  var out = [], hoy = new Date(), y = INICIO.anio, m = INICIO.mes;
+  var limY = hoy.getFullYear(), limM = hoy.getMonth() + 1;
+  while (y < limY || (y === limY && m <= limM)) {
+    out.push({anio:y, mes:m, key: y + ('0' + m).slice(-2)});
+    m++; if (m > 12) { m = 1; y++; }
+  }
+  return out;
+}
+function loadAll(){
+  var geoP = fetch(DATA_DIR + 'departamentos.geojson').then(function(r){ return r.json(); });
+  var namesP = fetch(DATA_DIR + 'departamentos_in1_nombres.csv').then(function(r){ return r.ok ? r.text() : ''; }).catch(function(){ return ''; });
+  var monthsP = Promise.all(candidatos().map(function(c){
+    return fetch(DATA_DIR + PREFIJO + c.key + '.csv', {cache:'no-cache'})
+      .then(function(r){ if (!r.ok) return null; return r.text(); })
+      .then(function(t){
+        if (!t || t.trim().charAt(0) === '<') return null;          // 404 servido como HTML
+        var rows = {};
+        parseCSV(t).forEach(function(o){ if (o.in1) rows[o.in1.padStart(5, '0')] = o; });
+        return {anio:c.anio, mes:c.mes, key:c.key, label: MESES_ES[c.mes - 1] + ' ' + c.anio, rows:rows, n:Object.keys(rows).length};
+      }).catch(function(){ return null; });
+  }));
+  return Promise.all([geoP, namesP, monthsP]).then(function(res){
+    S.geo = res[0];
+    S.geo.features.forEach(function(f){ S.feat[f.properties.in1] = f; });
+    if (res[1]) parseCSV(res[1]).forEach(function(o){
+      if (o.in1) S.names[o.in1.padStart(5, '0')] = {n:o.depto || o.depto_sin_tilde, p:o.provincia || o.prov_sin_tilde};
+    });
+    S.months = res[2].filter(function(m){ return m && m.n > 0; });
+    // Completa nombres faltantes con los del CSV mensual
+    S.months.forEach(function(m){ for (var k in m.rows) if (!S.names[k]) S.names[k] = {n:m.rows[k].departamento, p:m.rows[k].provincia}; });
+    var years = {}; S.months.forEach(function(m){ years[m.anio] = 1; });
+    S.multiYear = Object.keys(years).length > 1;
+  });
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -576,47 +609,33 @@ function buildVarRail(){
     }).join('') + '</div>';
   }).join('');
 }
-
-function catCounts(feats, vid){
-  var vdef = VARS[vid], counts = {}, nd = 0;
-  vdef.thresholds.forEach(function(t){ counts[t.cat] = 0; });
-  feats.forEach(function(f){
-    var x = num(f.properties[vid]);
-    if (isNaN(x)) nd++; else counts[getCat(x, vdef).cat]++;
-  });
-  return {counts:counts, nd:nd, total:feats.length};
+function catCounts(ids, vid, m){
+  var counts = [0,0,0,0,0], nd = 0;
+  ids.forEach(function(in1){ var p = pct(in1, vid, m); if (isNaN(p)) nd++; else counts[catIndex(p)]++; });
+  return {counts:counts, nd:nd, total:ids.length};
 }
-
-function stackHTML(cc, vdef, cls){
-  var valid = (vdef.nodata ? cc.total : cc.total - cc.nd) || 1;
-  return '<div class="stack ' + (cls || '') + '">' + vdef.thresholds.map(function(t){
-    var n = cc.counts[t.cat]; if (!n) return '';
-    return '<div title="' + esc(t.cat) + ': ' + n + '" style="width:' + (n / valid * 100).toFixed(2) + '%;background:' + rgb(t.rgb) + '"></div>';
-  }).join('') + (vdef.nodata && cc.nd ? '<div title="' + esc(vdef.nodata.cat) + ': ' + cc.nd + '" style="width:' + (cc.nd / valid * 100).toFixed(2) + '%;background:' + rgb(vdef.nodata.rgb) + '"></div>' : '') + '</div>';
+function allIds(){ return Object.keys(S.feat); }
+function stackHTML(cc, vid, cls){
+  var pal = PAL[VARS[vid].pal], valid = (cc.total - cc.nd) || 1;
+  return '<div class="stack ' + (cls || '') + '">' + cc.counts.map(function(n, i){
+    if (!n) return '';
+    return '<div title="' + esc(WORDS_LONG[i]) + ': ' + n + '" style="width:' + (n / valid * 100).toFixed(2) + '%;background:' + rgb(pal[i]) + '"></div>';
+  }).join('') + '</div>';
 }
-
+function distGrid(cc, vid, big){
+  var d = VARS[vid], pal = PAL[d.pal];
+  return '<div class="dist-g"' + (big ? ' style="font-size:13px;gap:8px 16px"' : '') + '>' + cc.counts.map(function(n, i){
+    return '<div><span style="display:flex;align-items:center;gap:6px;min-width:0"><i class="sw" style="background:' + rgb(pal[i]) + '"></i>' +
+      '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + esc(WORDS_LONG[i]) + '">' + esc(WORDS[i]) + '</span></span><b>' + n + '</b></div>';
+  }).join('') + (cc.nd ? '<div><span>Sin datos</span><b>' + cc.nd + '</b></div>' : '') + '</div>';
+}
 function renderRailDist(){
-  if (!S.gj) return;
-  var vdef = VARS[S.vid], cc = catCounts(S.gj.features, S.vid);
+  if (!cur()) return;
+  var cc = catCounts(allIds(), S.vid);
   $('rail-dist').innerHTML =
     '<div class="dist-h"><b>Distribución nacional</b><span class="mono">n = ' + cc.total + '</span></div>' +
-    stackHTML(cc, vdef) +
-    '<div class="dist-g">' + vdef.thresholds.map(function(t){
-      return '<div><span style="display:flex;align-items:center;gap:6px;min-width:0"><i class="sw" style="background:' + rgb(t.rgb) + '"></i>' +
-        '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.cat) + '</span></span><b>' + cc.counts[t.cat] + '</b></div>';
-    }).join('') + ndRow(cc, vdef) + '</div>';
+    stackHTML(cc, S.vid) + distGrid(cc, S.vid).replace('class="dist-g"', 'class="dist-g" style="grid-template-columns:1fr"');
 }
-function ndRow(cc, vdef){
-  if (!cc.nd) return '';
-  if (vdef.nodata) return '<div title="' + esc(vdef.nodata.cat) + '"><span style="display:flex;align-items:center;gap:6px;min-width:0"><i class="sw" style="background:' + rgb(vdef.nodata.rgb) + '"></i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sin estimar (saturado)</span></span><b>' + cc.nd + '</b></div>';
-  return '<div><span>Sin datos</span><b>' + cc.nd + '</b></div>';
-}
-var APPFLOODS_A = function(){ return '<a href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">AppFloods</a>'; };
-function notesHTML(showSat){
-  return '<div class="notes"><p><b>Nota sobre las anomalías.</b> Las anomalías se estiman de forma rápida y generalizada a partir del desvío respecto de la media. Para un mayor nivel de detalle y precisión, consultá ' + APPFLOODS_A() + '.</p>' +
-    (showSat === false ? '' : '<p><b>Anomalía de humedad del suelo «sin estimar».</b> Cuando no hay valor, el suelo está sobresaturado y con alta carga de agua en superficie, por lo que la anomalía no se estima.</p>') + '</div>';
-}
-
 function selectVar(vid){
   S.vid = vid;
   document.querySelectorAll('.vbtn').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-vid') === vid); });
@@ -630,52 +649,60 @@ function selectVar(vid){
 // Leyenda y línea de tiempo
 // ═════════════════════════════════════════════════════════════════════════════
 function renderLegend(){
-  var v = VARS[S.vid];
-  var items = v.nodata ? v.thresholds.concat([v.nodata]) : v.thresholds;
-  $('legend').innerHTML =
-    '<div class="legend-h"><b>' + esc(v.label) + ' <span>· ' + esc(v.unit) + ' · ' + esc(curLabel().toLowerCase()) + '</span></b>' +
-    '<a href="metodologia.html#' + (METO_ID[S.vid] || '') + '" target="_blank" rel="noopener">Cómo se calcula</a></div>' +
-    '<div class="legend-g" style="grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))">' +
-    items.map(function(t){
-      return '<div><i style="background:' + rgb(t.rgb) + '"></i><b title="' + esc(t.cat) + '">' + esc(t.cat) + '</b><small>' + esc(t.range) + '</small></div>';
+  var d = VARS[S.vid], pal = PAL[d.pal], el = $('legend');
+  el.classList.toggle('min', S.legendMin);
+  var chev = S.legendMin
+    ? '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>'
+    : '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  el.innerHTML =
+    '<div class="legend-h">' +
+    '<button class="leg-toggle" onclick="toggleLegend()" aria-expanded="' + (!S.legendMin) + '" aria-label="' + (S.legendMin ? 'Expandir leyenda' : 'Minimizar leyenda') + '" title="' + (S.legendMin ? 'Expandir leyenda' : 'Minimizar leyenda') + '">' + chev + '</button>' +
+    '<b>' + esc(d.label) + ' <span>· respecto de lo normal del mes · ' + esc(curLabel().toLowerCase()) + '</span></b>' +
+    '<span class="leg-strip" aria-hidden="true">' + pal.map(function(c){ return '<i style="background:' + rgb(c) + '"></i>'; }).join('') + '</span>' +
+    '<span class="leg-act"><a href="metodologia.html#' + d.meto + '" target="_blank" rel="noopener">Cómo se calcula</a></span></div>' +
+    '<div class="legend-g" style="grid-template-columns:repeat(5,minmax(0,1fr))">' +
+    CATS.map(function(c, i){
+      return '<div><i style="background:' + rgb(pal[i]) + '"></i><b title="' + esc(WORDS_LONG[i]) + '">' + esc(WORDS[i]) + '</b><small>' + esc(c.range) + '</small></div>';
     }).join('') + '</div>' +
-    (/^A/.test(S.vid) ? '<div class="note" style="font-size:12px">Anomalía estimada de forma rápida a partir del desvío respecto de la media. Estimaciones más precisas en ' + APPFLOODS_A() + '.</div>' : '');
+    '<div class="note" style="font-size:12px">Normal = mediana del mismo mes en ' + BASE_TXT + ' (p = percentil). Estimaciones más precisas en <a href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">AppFloods</a>.</div>';
 }
-
+function toggleLegend(){
+  S.legendMin = !S.legendMin;
+  try { localStorage.setItem('legendMin', S.legendMin ? '1' : '0'); } catch(e){}
+  renderLegend();
+}
 function buildTimeline(){
-  var ch = chrono();
-  $('months').style.gridTemplateColumns = 'repeat(' + ch.length + ',minmax(0,1fr))';
-  $('months').innerHTML = ch.map(function(o){
-    return '<button data-idx="' + o.i + '" title="' + esc(o.p.label) + '" onclick="stopPlay();loadPeriod(' + o.i + ')">' + shortMonth(o.p.label) + '</button>';
+  $('months').style.gridTemplateColumns = 'repeat(' + S.months.length + ',minmax(0,1fr))';
+  $('months').innerHTML = S.months.map(function(m, i){
+    return '<button data-idx="' + i + '" title="' + esc(m.label) + '" onclick="stopPlay();loadMonth(' + i + ')">' + shortMonth(m) + '</button>';
   }).join('');
-  var years = {}; ch.forEach(function(o){ years[o.p.label.slice(-4)] = 1; });
+  var years = {}; S.months.forEach(function(m){ years[m.anio] = 1; });
   $('tl-year').textContent = Object.keys(years).join('–');
-  $('tl-n').textContent = ch.length + ' meses';
+  $('tl-n').textContent = S.months.length + (S.months.length === 1 ? ' mes' : ' meses');
   $('play-btn').innerHTML = ICON('play');
+  $('period-select').innerHTML = S.months.map(function(m, i){ return '<option value="' + i + '">' + esc(m.label) + '</option>'; }).reverse().join('');
 }
 function updateTimeline(){
-  document.querySelectorAll('#months button').forEach(function(b){ b.classList.toggle('on', +b.getAttribute('data-idx') === S.pIdx); });
-  $('period-select').value = S.pIdx;
+  document.querySelectorAll('#months button').forEach(function(b){ b.classList.toggle('on', +b.getAttribute('data-idx') === S.mIdx); });
+  $('period-select').value = S.mIdx;
 }
 function togglePlay(){
   if (S.playTimer) { stopPlay(); return; }
-  var ch = chrono();
-  var pos = ch.findIndex(function(o){ return o.i === S.pIdx; });
-  if (pos >= ch.length - 1) pos = -1;          // si está en el último, arranca desde el primero
+  var pos = S.mIdx >= S.months.length - 1 ? -1 : S.mIdx;
   $('play-btn').innerHTML = ICON('pause'); $('play-btn').setAttribute('aria-label', 'Pausar serie');
-  function step(){
-    pos++;
-    if (pos >= ch.length) { stopPlay(); return; }
-    loadPeriod(ch[pos].i);
-    if (ch[pos + 1]) prefetch(ch[pos + 1].p.file);
-  }
-  step();
-  S.playTimer = setInterval(step, 2200);
+  function step(){ pos++; if (pos >= S.months.length) { stopPlay(); return; } loadMonth(pos); }
+  step(); S.playTimer = setInterval(step, 1800);
 }
 function stopPlay(){
   if (S.playTimer) clearInterval(S.playTimer);
   S.playTimer = null;
   $('play-btn').innerHTML = ICON('play'); $('play-btn').setAttribute('aria-label', 'Reproducir serie');
+}
+function loadMonth(i){
+  S.mIdx = i; updateTimeline();
+  updateMap(); renderLegend(); renderRailDist(); renderDetail();
+  if (S.view === 'panorama') renderPanorama();
+  if (S.view === 'ficha') renderFicha();
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -697,133 +724,75 @@ function initMap(){
     layers: [],
     onViewStateChange: function(e){ S.vs = e.viewState; return e.viewState; },
     getCursor: function(st){ return st.isDragging ? 'grabbing' : (st.isHovering ? 'pointer' : 'grab'); },
+    // Luz cenital: el techo de cada departamento conserva el color exacto de la leyenda
+    // (ambiente 0.75 + difusa 0.25 = 1.0) y solo los laterales se oscurecen para dar relieve.
     effects: [new deck.LightingEffect({
       ambientLight: new deck.AmbientLight({color:[255,255,255], intensity:1.0}),
-      dirLight: new deck.DirectionalLight({color:[255,255,240], intensity:2.2, direction:[-1,0,-1]})
+      dirLight: new deck.DirectionalLight({color:[255,255,255], intensity:1.0, direction:[0,0,-1]})
     })]
   });
 }
-
+function elevOf(in1){ var p = pct(in1, S.vid); return isNaN(p) ? 0.02 : Math.max(0.04, p / 100); }
 function updateMap(){
-  if (!deckgl || !S.gj) return;
-  var vid = S.vid, vdef = VARS[vid], key = vid + '|' + S.pIdx + '|' + S.mode3d;
+  if (!deckgl || !S.geo || !cur()) return;
+  var vid = S.vid, key = vid + '|' + S.mIdx + '|' + S.mode3d;
   var layers = [new deck.GeoJsonLayer({
-    id: 'deptos', data: S.gj,
-    extruded: S.mode3d, filled: true, stroked: !S.mode3d, wireframe: S.mode3d,
+    id:'deptos', data:S.geo,
+    extruded:S.mode3d, filled:true, stroked:!S.mode3d, wireframe:S.mode3d,
     elevationScale: MAX_ELEVATION,
-    getElevation: function(f){ return normElev(num(f.properties[vid]), vdef); },
-    getFillColor: function(f){ return getCat(num(f.properties[vid]), vdef).rgb.concat(S.mode3d ? 255 : 230); },
-    getLineColor: S.mode3d ? function(f){ return getCat(num(f.properties[vid]), vdef).rgb; } : [15,27,36,110],
+    getElevation: function(f){ return elevOf(f.properties.in1); },
+    getFillColor: function(f){ return catOf(pct(f.properties.in1, vid), vid).rgb.concat(255); },
+    getLineColor: S.mode3d ? function(f){ return catOf(pct(f.properties.in1, vid), vid).rgb; } : [15,27,36,110],
     getLineWidth: 60, lineWidthMinPixels: 0.4,
-    pickable: true, autoHighlight: true, highlightColor: [255,255,255,80],
-    material: {ambient:0.35, diffuse:0.7, shininess:32, specularColor:[180,180,180]},
+    pickable:true, autoHighlight:true, highlightColor:[255,255,255,80],
+    material: {ambient:0.75, diffuse:0.25, shininess:0, specularColor:[0,0,0]},
     updateTriggers: {getElevation:key, getFillColor:key, getLineColor:key},
     onHover: onHover,
     onClick: function(info){ if (info.object) selectDept(info.object.properties.in1, false); }
   })];
-  if (S.sel && S.byIn1[S.sel]) {
-    var f = S.byIn1[S.sel];
+  if (S.sel && S.feat[S.sel]) {
+    var f = S.feat[S.sel];
     layers.push(new deck.GeoJsonLayer({
-      id: 'sel', data: [f], pickable: false,
-      extruded: S.mode3d, filled: S.mode3d, stroked: true, wireframe: S.mode3d,
+      id:'sel', data:[f], pickable:false,
+      extruded:S.mode3d, filled:S.mode3d, stroked:true, wireframe:S.mode3d,
       elevationScale: MAX_ELEVATION,
-      getElevation: function(){ return normElev(num(f.properties[vid]), vdef) + 0.015; },
-      getFillColor: [255,255,255,70],
-      getLineColor: [255,255,255,255], getLineWidth: 2, lineWidthUnits: 'pixels',
-      updateTriggers: {getElevation:key}
+      getElevation: function(){ return elevOf(S.sel) + 0.015; },
+      getFillColor:[255,255,255,70], getLineColor:[255,255,255,255], getLineWidth:2, lineWidthUnits:'pixels',
+      updateTriggers:{getElevation:key}
     }));
   }
   if (S.userPos) {
-    // En 3D se apoya sobre la columna del departamento donde está el usuario
     var ud = deptAt(S.userPos[0], S.userPos[1]);
-    var z = (S.mode3d && ud) ? normElev(num(ud.properties[vid]), vdef) * MAX_ELEVATION + 2500 : 0;
+    var z = (S.mode3d && ud) ? elevOf(ud.properties.in1) * MAX_ELEVATION + 2500 : 0;
     layers.push(new deck.ScatterplotLayer({
-      id: 'user-pos', data: [{p: [S.userPos[0], S.userPos[1], z]}], pickable: false,
+      id:'user-pos', data:[{p:[S.userPos[0], S.userPos[1], z]}], pickable:false,
       getPosition: function(d){ return d.p; },
-      radiusUnits: 'pixels', getRadius: 8, stroked: true, filled: true,
-      getFillColor: [29,124,122,255], getLineColor: [255,255,255,255], lineWidthUnits: 'pixels', getLineWidth: 3,
-      updateTriggers: {getPosition: key + '|' + S.userPos.join(',')}
+      radiusUnits:'pixels', getRadius:8, stroked:true, filled:true,
+      getFillColor:[29,124,122,255], getLineColor:[255,255,255,255], lineWidthUnits:'pixels', getLineWidth:3,
+      updateTriggers:{getPosition: key + '|' + S.userPos.join(',')}
     }));
   }
-  deckgl.setProps({layers: layers});
+  deckgl.setProps({layers:layers});
 }
-
-// ── Geolocalización: ubica al usuario y selecciona su departamento ──────────
-function toast(msg, ms){
-  var t = $('toast'); t.textContent = msg; t.classList.add('on');
-  clearTimeout(toast._t); if (ms) toast._t = setTimeout(function(){ t.classList.remove('on'); }, ms);
-}
-function ringContains(ring, x, y){
-  var inside = false;
-  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
-    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
-  }
-  return inside;
-}
-function polyContains(poly, x, y){
-  if (!ringContains(poly[0], x, y)) return false;
-  for (var k = 1; k < poly.length; k++) if (ringContains(poly[k], x, y)) return false;   // huecos
-  return true;
-}
-function deptAt(lon, lat){
-  if (!S.gj) return null;
-  for (var i = 0; i < S.gj.features.length; i++) {
-    var f = S.gj.features[i], g = f.geometry; if (!g) continue;
-    var b = f._bb || (f._bb = bbox(f));
-    if (lon < b[0] || lon > b[2] || lat < b[1] || lat > b[3]) continue;
-    var polys = g.type === 'Polygon' ? [g.coordinates] : (g.type === 'MultiPolygon' ? g.coordinates : []);
-    for (var k = 0; k < polys.length; k++) if (polyContains(polys[k], lon, lat)) return f;
-  }
-  return null;
-}
-function locateMe(){
-  var btn = $('geo-btn');
-  if (!navigator.geolocation) { toast('Tu navegador no permite geolocalización', 4000); return; }
-  if (!window.isSecureContext) { toast('La ubicación solo funciona en https o localhost', 5000); return; }
-  btn.setAttribute('aria-busy', 'true'); toast('Buscando tu ubicación…');
-  navigator.geolocation.getCurrentPosition(function(pos){
-    btn.removeAttribute('aria-busy'); btn.classList.add('on');
-    var lon = pos.coords.longitude, lat = pos.coords.latitude;
-    S.userPos = [lon, lat];
-    var f = deptAt(lon, lat);
-    if (f) {
-      $('search-inp').value = f.properties.iadepto_si || '';
-      if (S.view !== 'mapa') setView('mapa');
-      selectDept(f.properties.in1, true);
-      toast('Estás en ' + (f.properties.iadepto_si || '') + ', ' + provName(f.properties.iaprov_sin), 3500);
-    } else {
-      updateMap();
-      setViewState({longitude: lon, latitude: lat, zoom: 7, transitionDuration: 900}, true);
-      toast('Tu ubicación está fuera de los departamentos del mapa', 4500);
-    }
-  }, function(err){
-    btn.removeAttribute('aria-busy');
-    var m = err.code === 1 ? 'Permiso de ubicación denegado. Habilitalo en el candado de la barra de direcciones.'
-          : err.code === 3 ? 'La ubicación tardó demasiado. Probá de nuevo.' : 'No se pudo obtener tu ubicación.';
-    toast(m, 5000);
-  }, {enableHighAccuracy: false, timeout: 15000, maximumAge: 300000});
-}
-
 function onHover(info){
   var el = $('hover');
   if (!info.object || isMobile()) { el.style.display = 'none'; return; }
-  var p = info.object.properties, vdef = VARS[S.vid], v = num(p[S.vid]), c = getCat(v, vdef);
-  el.innerHTML = '<b>' + esc(p.iadepto_si || p.nam) + '</b> <span style="opacity:.75">' + esc(provName(p.iaprov_sin)) + '</span><br>' +
-    esc(vdef.short) + ': <span class="v">' + fmtU(v, vdef) + '</span><br>' +
-    '<span style="display:inline-flex;align-items:center;gap:6px"><i class="sw" style="background:' + rgb(c.rgb) + '"></i>' + esc(c.cat) + '</span>';
+  var in1 = info.object.properties.in1, d = VARS[S.vid], p = pct(in1, S.vid), c = catOf(p, S.vid);
+  el.innerHTML = '<b>' + esc(nameOf(in1)) + '</b> <span style="opacity:.75">' + esc(provOf(in1)) + '</span><br>' +
+    esc(d.short) + ': <span class="v">' + fmtU(val(in1, S.vid), d) + '</span><br>' +
+    'Normal del mes: <span class="v">' + fmtU(med(in1, S.vid), d) + '</span><br>' +
+    '<span style="display:inline-flex;align-items:center;gap:6px"><i class="sw" style="background:' + rgb(c.rgb) + '"></i>' + esc(c.word) + (isNaN(p) ? '' : ' · percentil ' + Math.round(p)) + '</span>';
   el.style.display = 'block';
   var W = $('mapwrap').clientWidth;
   el.style.left = Math.min(info.x + 14, W - 270) + 'px';
   el.style.top = (info.y + 14) + 'px';
 }
-
 function setViewState(patch, fly){
   if (!deckgl) return;
   var base = {longitude:S.vs.longitude, latitude:S.vs.latitude, zoom:S.vs.zoom, pitch:S.vs.pitch, bearing:S.vs.bearing};
   var vs = Object.assign(base, patch, {transitionDuration: patch.transitionDuration || 500});
   if (fly && deck.FlyToInterpolator) vs.transitionInterpolator = new deck.FlyToInterpolator();
-  deckgl.setProps({initialViewState: vs});
+  deckgl.setProps({initialViewState:vs});
 }
 function zoomBy(d){ setViewState({zoom: Math.max(2, Math.min(14, S.vs.zoom + d)), transitionDuration:300}); }
 function resetView(){ setViewState(Object.assign({}, VIEW0, {pitch: S.mode3d ? 45 : 0, bearing: S.mode3d ? -12 : 0, transitionDuration:800}), true); }
@@ -842,11 +811,10 @@ function bbox(feat){
   return b;
 }
 function zoomToDept(in1){
-  var f = S.byIn1[in1]; if (!f) return;
-  var b = bbox(f), maxd = Math.max(b[2]-b[0], b[3]-b[1], 1e-4);
+  var f = S.feat[in1]; if (!f) return;
+  var b = f._bb || (f._bb = bbox(f)), maxd = Math.max(b[2]-b[0], b[3]-b[1], 1e-4);
   setViewState({longitude:(b[0]+b[2])/2, latitude:(b[1]+b[3])/2, zoom: Math.max(4.2, Math.min(9, Math.log2(360/maxd) - 1.2)), transitionDuration:900}, true);
 }
-// MapLibre a veces no toma el tamaño del contenedor al cambiar de vista: forzamos resize
 function fixMapSize(){
   var tries = 0, iv = setInterval(function(){
     window.dispatchEvent(new Event('resize'));
@@ -855,90 +823,75 @@ function fixMapSize(){
   }, 200);
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Carga de datos
-// ═════════════════════════════════════════════════════════════════════════════
-function fetchGJ(file){
-  if (S.cache[file]) return Promise.resolve(S.cache[file]);
-  return fetch(DATA_DIR + file).then(function(r){ if (!r.ok) throw new Error(file); return r.json(); })
-    .then(function(gj){ S.cache[file] = gj; return gj; });
+// ── Geolocalización ──────────────────────────────────────────────────────────
+function toast(msg, ms){
+  var t = $('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); if (ms) toast._t = setTimeout(function(){ t.classList.remove('on'); }, ms);
 }
-function prefetch(file){ fetchGJ(file).catch(function(){}); }
-
-function loadPeriod(idx){
-  S.pIdx = idx; updateTimeline();
-  var token = ++S.loadToken, file = PERIODS[idx].file;
-  if (!S.cache[file]) $('loading').classList.add('on');
-  fetchGJ(file).then(function(gj){
-    if (token !== S.loadToken) return;          // llegó tarde: hay otra carga más nueva
-    $('loading').classList.remove('on');
-    S.gj = gj; S.byIn1 = {};
-    gj.features.forEach(function(f){ if (f.properties.in1) S.byIn1[f.properties.in1] = f; });
-    populateProvinces();
-    mergeCurrentIntoMonths();
-    updateMap(); renderLegend(); renderRailDist(); renderDetail();
-    if (S.view === 'panorama') renderPanorama();
-    if (S.view === 'ficha') renderFicha();
-  }).catch(function(e){
-    $('loading').textContent = 'No se pudo cargar ' + PERIODS[idx].label;
-    console.error('loadPeriod', e);
-  });
+function ringContains(ring, x, y){
+  var inside = false;
+  for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
 }
-
-// Serie compacta sin geometría (data/series_hidro.json). Si falta, descarga todos los GeoJSON.
-function loadAllMonths(){
-  var vm = PERIODS[0].file.match(/(\d{6})/), ver = vm ? vm[1] : '1';
-  fetch(DATA_DIR + 'series_hidro.json?v=' + ver, {cache:'no-cache'})
-    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
-    .then(function(s){
-      S.months = s.meses.map(function(lbl){
-        var by = {};
-        for (var k in s.datos) if (s.datos[k][lbl]) by[k] = s.datos[k][lbl];
-        return {label:lbl, byIn1:by};
-      });
-      mergeCurrentIntoMonths();
-      renderDetail(); if (S.view === 'ficha') renderFicha();
-    })
-    .catch(function(){
-      Promise.all(chrono().map(function(o){
-        return fetchGJ(o.p.file).then(function(gj){
-          var by = {}; gj.features.forEach(function(f){ if (f.properties.in1) by[f.properties.in1] = f.properties; });
-          return {label:o.p.label, byIn1:by};
-        });
-      })).then(function(arr){ S.months = arr; renderDetail(); if (S.view === 'ficha') renderFicha(); })
-        .catch(function(e){ console.error('loadAllMonths', e); });
-    });
+function polyContains(poly, x, y){
+  if (!ringContains(poly[0], x, y)) return false;
+  for (var k = 1; k < poly.length; k++) if (ringContains(poly[k], x, y)) return false;
+  return true;
 }
-// Si series_hidro.json quedó desactualizado (le falta el mes cargado), lo completa con el GeoJSON del mes
-function mergeCurrentIntoMonths(){
-  if (!S.gj || !S.months.length) return;
-  var l = curLabel();
-  if (S.months.some(function(m){ return m.label === l; })) return;
-  var by = {};
-  S.gj.features.forEach(function(f){ if (f.properties.in1) by[f.properties.in1] = f.properties; });
-  S.months.push({label:l, byIn1:by});
-  var order = chrono().map(function(o){ return o.p.label; });
-  S.months.sort(function(a, b){ return order.indexOf(a.label) - order.indexOf(b.label); });
-  console.warn('series_hidro.json no incluye ' + l + ': se completó desde el GeoJSON. Conviene regenerarlo con make_series.py');
+function deptAt(lon, lat){
+  if (!S.geo) return null;
+  for (var i = 0; i < S.geo.features.length; i++) {
+    var f = S.geo.features[i], g = f.geometry; if (!g) continue;
+    var b = f._bb || (f._bb = bbox(f));
+    if (lon < b[0] || lon > b[2] || lat < b[1] || lat > b[3]) continue;
+    var polys = g.type === 'Polygon' ? [g.coordinates] : (g.type === 'MultiPolygon' ? g.coordinates : []);
+    for (var k = 0; k < polys.length; k++) if (polyContains(polys[k], lon, lat)) return f;
+  }
+  return null;
 }
-function seriesOf(in1, vid){
-  return S.months.map(function(m){ var p = m.byIn1[in1]; return {label:m.label, v: p ? num(p[vid]) : NaN}; });
+function locateMe(){
+  var btn = $('geo-btn');
+  if (!navigator.geolocation) { toast('Tu navegador no permite geolocalización', 4000); return; }
+  if (!window.isSecureContext) { toast('La ubicación solo funciona en https o localhost', 5000); return; }
+  btn.setAttribute('aria-busy', 'true'); toast('Buscando tu ubicación…');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    btn.removeAttribute('aria-busy'); btn.classList.add('on');
+    var lon = pos.coords.longitude, lat = pos.coords.latitude;
+    S.userPos = [lon, lat];
+    var f = deptAt(lon, lat);
+    if (f) {
+      var in1 = f.properties.in1;
+      $('search-inp').value = nameOf(in1);
+      if (S.view !== 'mapa') setView('mapa');
+      selectDept(in1, true);
+      toast('Estás en ' + nameOf(in1) + ', ' + provOf(in1), 3500);
+    } else {
+      updateMap();
+      setViewState({longitude:lon, latitude:lat, zoom:7, transitionDuration:900}, true);
+      toast('Tu ubicación está fuera de los departamentos del mapa', 4500);
+    }
+  }, function(err){
+    btn.removeAttribute('aria-busy');
+    toast(err.code === 1 ? 'Permiso de ubicación denegado. Habilitalo en el candado de la barra de direcciones.'
+        : err.code === 3 ? 'La ubicación tardó demasiado. Probá de nuevo.' : 'No se pudo obtener tu ubicación.', 5000);
+  }, {enableHighAccuracy:false, timeout:15000, maximumAge:300000});
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Búsqueda
+// Búsqueda y selección
 // ═════════════════════════════════════════════════════════════════════════════
-function sinTilde(s){ return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
 function initSearch(){
   var inp = $('search-inp'), sug = $('search-sug');
   inp.addEventListener('input', function(){
     var q = sinTilde(inp.value.trim());
-    if (!q || !S.gj) { sug.style.display = 'none'; return; }
-    var m = S.gj.features.filter(function(f){ return sinTilde(f.properties.iadepto_si).indexOf(q) >= 0; })
-      .sort(function(a, b){ return (a.properties.iadepto_si || '').localeCompare(b.properties.iadepto_si || ''); }).slice(0, 10);
-    sug.innerHTML = m.length ? m.map(function(f){
-      var p = f.properties;
-      return '<button role="option" onclick="pickDept(\'' + p.in1 + '\')"><span>' + esc(p.iadepto_si) + '</span><small>' + esc(provName(p.iaprov_sin)) + '</small></button>';
+    if (!q) { sug.style.display = 'none'; return; }
+    var m = allIds().filter(function(k){ return sinTilde(nameOf(k)).indexOf(q) >= 0; })
+      .sort(function(a, b){ return nameOf(a).localeCompare(nameOf(b)); }).slice(0, 10);
+    sug.innerHTML = m.length ? m.map(function(k){
+      return '<button role="option" onclick="pickDept(\'' + k + '\')"><span>' + esc(nameOf(k)) + '</span><small>' + esc(provOf(k)) + '</small></button>';
     }).join('') : '<div class="empty">Sin resultados</div>';
     sug.style.display = 'block';
   });
@@ -950,89 +903,85 @@ function initSearch(){
 }
 function pickDept(in1){
   $('search-sug').style.display = 'none';
-  var f = S.byIn1[in1]; if (f) $('search-inp').value = f.properties.iadepto_si || '';
+  $('search-inp').value = nameOf(in1);
   if (S.view !== 'mapa') setView('mapa');
   selectDept(in1, true);
 }
 function selectDept(in1, zoom){
-  S.sel = in1;
-  updateMap(); renderDetail();
+  S.sel = in1; updateMap(); renderDetail();
   if (zoom) zoomToDept(in1);
   if (isMobile()) $('detail').classList.add('open');
 }
-function clearDept(){
-  S.sel = null; updateMap(); renderDetail();
-  $('detail').classList.remove('open');
-}
+function clearDept(){ S.sel = null; updateMap(); renderDetail(); $('detail').classList.remove('open'); }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Gráfico de barras HTML (sparkline y gráficos de la ficha)
+// Gráfico de barras HTML
 // ═════════════════════════════════════════════════════════════════════════════
-function barChart(series, vdef, o){
+// series: [{label, v, med, color}] · o: {height, domain:[lo,hi], bands:[{v,label}], curIdx, gap, initials, showMed}
+function barChart(series, o){
   o = o || {};
-  var H = o.height || 180, padR = o.cuts ? 64 : 0, curIdx = o.curIdx;
-  var vals = series.map(function(s){ return s.v; }).filter(function(v){ return !isNaN(v); });
-  var cuts = o.cuts ? vdef.cuts : [];
-  var lo = Math.min.apply(null, [0].concat(vals, o.cuts ? cuts : []));
-  var hi = Math.max.apply(null, [0].concat(vals, o.cuts ? cuts : []));
-  if (o.cuts) { var pad = (hi - lo) * 0.08; hi += pad; if (lo < 0) lo -= pad; }
+  var H = o.height || 180, padR = o.bands ? 56 : 0, n = series.length;
+  var vals = []; series.forEach(function(s){ if (!isNaN(s.v)) vals.push(s.v); if (o.showMed && !isNaN(s.med)) vals.push(s.med); });
+  var lo, hi;
+  if (o.domain) { lo = o.domain[0]; hi = o.domain[1]; }
+  else { lo = Math.min.apply(null, [0].concat(vals)); hi = Math.max.apply(null, [0].concat(vals)); var pad = (hi - lo) * 0.08; hi += pad; if (lo < 0) lo -= pad; }
   if (hi === lo) hi = lo + 1;
-  function y(v){ return (v - lo) / (hi - lo) * H; }
-  var y0 = y(0), n = series.length;
+  function y(v){ return (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * H; }
+  var y0 = y(Math.max(lo, 0)), gap = o.gap || 8;
   var html = '<div class="bc" style="height:' + H + 'px">';
-  cuts.forEach(function(c){
-    html += '<div class="cut" style="bottom:' + y(c).toFixed(1) + 'px"><span>' + fmt(c, c % 1 === 0 ? 0 : 2) + '</span></div>';
-  });
-  html += '<div class="bars" style="right:' + padR + 'px;grid-template-columns:repeat(' + n + ',minmax(0,1fr));gap:' + (o.gap || 8) + 'px">';
+  (o.bands || []).forEach(function(b){ html += '<div class="band" style="bottom:' + y(b.v).toFixed(1) + 'px"><span>' + esc(b.label) + '</span></div>'; });
+  html += '<div class="bars" style="right:' + padR + 'px;grid-template-columns:repeat(' + n + ',minmax(0,1fr));gap:' + gap + 'px">';
   series.forEach(function(s, i){
-    var v = s.v, col;
-    if (isNaN(v)) { html += '<div class="bar" title="' + esc(s.label) + ': sin dato"></div>'; return; }
-    if (o.mono) col = (i === curIdx) ? '#1D7C7A' : '#B9C4C8';
-    else col = rgb(getCat(v, vdef).rgb);
-    var top = Math.max(y(v), y0), bot = Math.min(y(v), y0), h = Math.max(1.5, top - bot);
-    html += '<div class="bar" title="' + esc(s.label) + ': ' + fmtU(v, vdef) + '"><i class="' + (v < 0 ? 'neg' : '') + '" style="bottom:' + bot.toFixed(1) + 'px;height:' + h.toFixed(1) + 'px;background:' + col + '"></i></div>';
+    if (isNaN(s.v)) { html += '<div class="bar" title="' + esc(s.label) + ': sin dato"></div>'; return; }
+    var top = Math.max(y(s.v), y0), bot = Math.min(y(s.v), y0), h = Math.max(1.5, top - bot);
+    html += '<div class="bar" title="' + esc(s.title || s.label) + '"><i class="' + (s.v < 0 ? 'neg' : '') + '" style="bottom:' + bot.toFixed(1) + 'px;height:' + h.toFixed(1) + 'px;background:' + s.color + '"></i>' +
+      (o.showMed && !isNaN(s.med) ? '<i class="med" style="bottom:' + y(s.med).toFixed(1) + 'px;height:0;background:none"></i>' : '') + '</div>';
   });
   html += '</div>';
   if (lo < 0) html += '<div class="zero" style="right:' + padR + 'px;bottom:' + y0.toFixed(1) + 'px"></div>';
-  html += '</div>';
-  html += '<div class="bc-x" style="margin-right:' + padR + 'px;grid-template-columns:repeat(' + n + ',minmax(0,1fr));gap:' + (o.gap || 8) + 'px">' +
-    series.map(function(s, i){ return '<span class="' + (i === curIdx ? 'on' : '') + '">' + (o.initials ? s.label.charAt(0) : shortMonth(s.label)) + '</span>'; }).join('') + '</div>';
+  html += '</div><div class="bc-x" style="margin-right:' + padR + 'px;grid-template-columns:repeat(' + n + ',minmax(0,1fr));gap:' + gap + 'px">' +
+    series.map(function(s, i){ return '<span class="' + (i === o.curIdx ? 'on' : '') + '">' + (o.initials ? s.label.charAt(0) : s.short) + '</span>'; }).join('') + '</div>';
   return html;
 }
-function curMonthIdx(){ var l = curLabel(); for (var i = 0; i < S.months.length; i++) if (S.months[i].label === l) return i; return -1; }
+function seriesOf(in1, vid, mono){
+  return S.months.map(function(m, i){
+    var v = val(in1, vid, m), p = pct(in1, vid, m), md = med(in1, vid, m), c = catOf(p, vid), d = VARS[vid];
+    return {label:m.label, short:shortMonth(m), v:v, med:md, p:p,
+      color: mono ? (i === S.mIdx ? '#1D7C7A' : '#B9C4C8') : rgb(c.rgb),
+      title: m.label + ': ' + fmtU(v, d) + (isNaN(p) ? '' : ' · p' + Math.round(p)) + (isNaN(md) ? '' : ' · normal ' + fmtU(md, d))};
+  });
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Panel de detalle (derecha / hoja inferior en celular)
+// Panel de detalle
 // ═════════════════════════════════════════════════════════════════════════════
 function renderDetail(){
   var el = $('detail');
-  if (!S.sel || !S.byIn1[S.sel]) {
+  if (!S.sel || !S.feat[S.sel] || !cur()) {
     el.innerHTML = '<div class="d-empty">' + ICON('map') +
       '<b style="color:#14202A;font-size:15px">Elegí un departamento</b>' +
-      '<span>Hacé clic sobre el mapa o buscalo por nombre para ver sus valores y su evolución mensual.</span></div>';
+      '<span>Hacé clic sobre el mapa, buscalo por nombre o usá el botón de ubicación para ver cómo está el mes respecto de lo normal.</span></div>';
     return;
   }
-  var p = S.byIn1[S.sel].properties, vdef = VARS[S.vid], v = num(p[S.vid]), c = getCat(v, vdef);
-  var ser = seriesOf(S.sel, S.vid);
-  var html =
-    '<div class="d-head"><div class="d-top"><span>' + esc(provName(p.iaprov_sin)) + ' · <span class="mono">' + esc(p.in1) + '</span></span>' +
+  var in1 = S.sel, d = VARS[S.vid], v = val(in1, S.vid), p = pct(in1, S.vid), md = med(in1, S.vid), c = catOf(p, S.vid);
+  el.innerHTML =
+    '<div class="d-head"><div class="d-top"><span>' + esc(provOf(in1)) + ' · <span class="mono">' + esc(in1) + '</span></span>' +
       '<button class="x" aria-label="Cerrar ficha" onclick="clearDept()">' + ICON('close') + '</button></div>' +
-      '<div class="d-name">' + esc(p.iadepto_si || p.nam) + '</div><div class="d-sub">' + esc(curLabel()) + '</div></div>' +
-    '<div class="d-main"><div class="d-main-h"><b>' + esc(vdef.label) + '</b>' + chip(c) + '</div>' +
-      '<div class="big"><span class="mono">' + fmt(v, vdef.dec) + '</span><span>' + esc(vdef.unit) + '</span></div>' +
-      (S.months.length ? barChart(ser, vdef, {height:64, mono:true, curIdx:curMonthIdx(), gap:4, initials:true}) : '<div class="note">Cargando serie…</div>') +
+      '<div class="d-name">' + esc(nameOf(in1)) + '</div><div class="d-sub">' + esc(curLabel()) + '</div></div>' +
+    '<div class="d-main"><div class="d-main-h"><b>' + esc(d.label) + '</b>' + chip(c, p) + '</div>' +
+      '<div class="big"><span class="mono">' + fmt(v, d.dec) + '</span><span>' + esc(d.unit) + '</span></div>' +
+      '<div class="medline">Normal del mes (mediana ' + BASE_TXT + '): <b>' + fmtU(md, d) + '</b></div>' +
+      barChart(seriesOf(in1, S.vid, true), {height:64, curIdx:S.mIdx, gap:4, initials:!S.multiYear, showMed:true}) +
+      '<div class="note" style="font-size:11px">Barras: valor de cada mes · línea: valor normal del mes</div>' +
     '</div>' +
     '<div class="d-sec">Todas las variables</div><div class="d-list">' +
     VAR_IDS.map(function(vid){
-      var d = VARS[vid], x = num(p[vid]), cc = getCat(x, d);
-      return '<button class="d-row' + (vid === S.vid ? ' on' : '') + '" onclick="selectVar(\'' + vid + '\')" title="Ver ' + esc(d.label) + ' en el mapa">' +
-        '<span class="l">' + esc(d.short === 'Anomalía' ? 'Anomalía de precipitación' : d.short) + '</span>' +
-        '<i class="sw" style="background:' + rgb(cc.rgb) + '" title="' + esc(cc.cat) + '"></i>' +
-        '<span class="val">' + fmtU(x, d) + '</span></button>';
+      var dd = VARS[vid], pp = pct(in1, vid), cc = catOf(pp, vid);
+      return '<button class="d-row' + (vid === S.vid ? ' on' : '') + '" onclick="selectVar(\'' + vid + '\')" title="Ver ' + esc(dd.label) + ' en el mapa">' +
+        '<span class="l">' + esc(dd.short) + '</span><i class="sw" style="background:' + rgb(cc.rgb) + '" title="' + esc(cc.word) + '"></i>' +
+        '<span class="val">' + fmtU(val(in1, vid), dd) + '<span class="ptag">' + (isNaN(pp) ? '' : 'p' + Math.round(pp)) + '</span></span></button>';
     }).join('') + '</div>' +
-    (isNaN(num(p.AHum_mean)) ? '<div class="note" style="padding:10px 20px 0;font-size:12px">La anomalía de humedad no se estima porque el suelo está sobresaturado, con alta carga de agua en superficie.</div>' : '') +
     '<div class="d-foot"><button class="btn-dark" onclick="openFicha()">Ver ficha completa ' + ICON('arrow') + '</button></div>';
-  el.innerHTML = html;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1043,168 +992,158 @@ function setView(v){
   ['mapa','panorama','ficha'].forEach(function(k){ $('view-' + k).classList.toggle('active', k === v); });
   $('nav-mapa').classList.toggle('on', v === 'mapa' || v === 'ficha');
   $('nav-panorama').classList.toggle('on', v === 'panorama');
-  if (v === 'mapa') { fixMapSize(); }
-  else { stopPlay(); $('detail').classList.remove('open'); }
+  if (v === 'mapa') fixMapSize(); else { stopPlay(); $('detail').classList.remove('open'); }
   if (v === 'panorama') renderPanorama();
   if (v === 'ficha') renderFicha();
 }
 function openFicha(){ if (S.sel) { setView('ficha'); $('view-ficha').scrollTop = 0; } }
 
+function notesHTML(){
+  return '<div class="notes"><p><b>Cómo leer los percentiles.</b> Cada valor se compara con el mismo mes de los 25 años ' + BASE_TXT +
+    ': el percentil indica qué porcentaje de esos años tuvo un valor menor. Percentil 50 = valor normal (mediana); menos de 10 o más de 90 = situación poco frecuente.</p>' +
+    '<p><b>Nota sobre las anomalías.</b> Las anomalías se estiman de forma rápida y generalizada a partir del desvío respecto de lo normal. Para un mayor nivel de detalle y precisión, consultá <a href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">AppFloods</a>.</p>' +
+    '<p><b>Datos provisorios.</b> Los últimos meses pueden actualizarse cuando ERA5-Land y MODIS completan su publicación.</p></div>';
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // Ficha de departamento
 // ═════════════════════════════════════════════════════════════════════════════
 function aggregate(in1, vid){
-  var vals = seriesOf(in1, vid).map(function(s){ return s.v; }).filter(function(v){ return !isNaN(v); });
+  var vals = S.months.map(function(m){ return val(in1, vid, m); }).filter(function(v){ return !isNaN(v); });
   if (!vals.length) return NaN;
-  var m = VARS[vid].agg;
-  if (m === 'sum') return vals.reduce(function(a, b){ return a + b; }, 0);
-  if (m === 'last') return vals[vals.length - 1];
-  return vals.reduce(function(a, b){ return a + b; }, 0) / vals.length;
+  var a = VARS[vid].agg;
+  if (a === 'sum') return vals.reduce(function(x, y){ return x + y; }, 0);
+  if (a === 'last') return vals[vals.length - 1];
+  return vals.reduce(function(x, y){ return x + y; }, 0) / vals.length;
 }
-
+function legendItem(c, t){ return '<span><i class="sw" style="width:12px;height:12px;background:' + rgb(c) + '"></i>' + esc(t) + '</span>'; }
 function renderFicha(){
   var el = $('ficha');
-  if (!S.sel || !S.byIn1[S.sel]) { el.innerHTML = '<div class="note">Elegí un departamento en el mapa.</div>'; return; }
-  var f = S.byIn1[S.sel], p = f.properties, name = p.iadepto_si || p.nam, ci = curMonthIdx();
-  var companion = (S.vid === 'Hum_mean') ? 'ppt_mean' : (GROUPS[0].vars.indexOf(S.vid) >= 0 ? 'Hum_mean' : 'ppt_mean');
-  var kpis = ['ppt_mean','Hum_mean','inf_mean','ndvi_mean'];
+  if (!S.sel || !S.feat[S.sel]) { el.innerHTML = '<div class="note">Elegí un departamento en el mapa.</div>'; return; }
+  var in1 = S.sel, name = nameOf(in1), d = VARS[S.vid];
   var per = S.months.length ? (S.months[0].label.toLowerCase() + ' – ' + S.months[S.months.length - 1].label.toLowerCase()) : '';
-
   var html =
     '<div class="p-head"><div style="display:flex;flex-direction:column;gap:6px">' +
-      '<nav class="p-kick no-print" aria-label="Ruta"><a href="#" onclick="setView(\'mapa\');return false" style="display:inline-flex;align-items:center;gap:4px">' + ICON('back') + 'Mapa</a><span>/</span><span>' + esc(provName(p.iaprov_sin)) + '</span><span>/</span><span style="color:#14202A">' + esc(name) + '</span></nav>' +
+      '<nav class="p-kick no-print" aria-label="Ruta"><a href="#" onclick="setView(\'mapa\');return false" style="display:inline-flex;align-items:center;gap:4px">' + ICON('back') + 'Mapa</a><span>/</span><span>' + esc(provOf(in1)) + '</span><span>/</span><span style="color:#14202A">' + esc(name) + '</span></nav>' +
       '<h1>' + esc(name) + '</h1>' +
-      '<div class="p-sub">' + esc(provName(p.iaprov_sin)) + ' · código INDEC <span class="mono">' + esc(p.in1) + '</span> · ' + esc(curLabel()) + (per ? ' · serie ' + esc(per) : '') + '</div></div>' +
+      '<div class="p-sub">' + esc(provOf(in1)) + ' · código INDEC <span class="mono">' + esc(in1) + '</span> · ' + esc(curLabel()) + (per ? ' · serie ' + esc(per) : '') + '</div></div>' +
       '<div class="p-act no-print">' +
         '<button class="btn-out" onclick="downloadDeptCSV()">' + ICON('dl') + 'Descargar CSV</button>' +
         '<button class="btn-out" onclick="window.print()">' + ICON('print') + 'Imprimir / PDF</button>' +
         '<a class="btn-teal" href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">Analizar en AppFloods</a>' +
       '</div></div>';
 
-  html += '<section class="cards" aria-label="Estado ' + esc(curLabel()) + '">' + kpis.map(function(vid){
-    var d = VARS[vid], v = num(p[vid]), c = getCat(v, d);
-    return '<div class="card"><div class="t">' + esc(d.label) + '</div>' +
-      '<div class="n"><span class="mono">' + fmt(v, d.dec) + '</span><span>' + esc(d.unit) + '</span></div>' + chip(c) + '</div>';
+  html += '<section class="cards">' + VAR_IDS.map(function(vid){
+    var dd = VARS[vid], v = val(in1, vid), p = pct(in1, vid), md = med(in1, vid), c = catOf(p, vid);
+    return '<div class="card"><div class="t">' + esc(dd.label) + '</div>' +
+      '<div class="n"><span class="mono">' + fmt(v, dd.dec) + '</span><span>' + esc(dd.unit) + '</span></div>' + chip(c, p) +
+      '<div class="s">Normal del mes: ' + fmtU(md, dd) + '</div></div>';
   }).join('') + '</section>';
 
-  if (S.months.length) {
-    html += '<section class="two">' + [S.vid, companion].map(function(vid){
-      var d = VARS[vid];
-      return '<div class="box"><div class="box-h"><h2>' + esc(d.label) + '</h2><span>' + esc(d.unit) + ' · umbrales punteados</span></div>' +
-        barChart(seriesOf(S.sel, vid), d, {height:180, cuts:true, curIdx:ci}) + '</div>';
-    }).join('') + '</section>';
+  var ser = seriesOf(in1, S.vid, false);
+  html += '<section class="two">' +
+    '<div class="box"><div class="box-h"><h2>' + esc(d.label) + '</h2><span>' + esc(d.unit) + ' · línea = valor normal del mes</span></div>' +
+      barChart(ser, {height:180, curIdx:S.mIdx, showMed:true}) + '</div>' +
+    '<div class="box"><div class="box-h"><h2>Percentil respecto de ' + BASE_TXT + '</h2><span>0–100 · 50 = normal</span></div>' +
+      barChart(ser.map(function(s){ return Object.assign({}, s, {v:s.p}); }), {height:180, curIdx:S.mIdx, domain:[0,100],
+        bands:[{v:90,label:'p90'},{v:70,label:'p70'},{v:50,label:'p50'},{v:30,label:'p30'},{v:10,label:'p10'}]}) + '</div>' +
+    '</section>';
 
-    // Matriz de estados + resumen del período
-    var aggLbl = {sum:'Σ acumulado', mean:'media', last:'última'};
-    html += '<section class="box" aria-label="Matriz de estados"><div class="box-h"><h2>Estado mensual por variable</h2><span>clic en una fila para verla en el mapa</span></div>' +
-      '<div class="scroll-x"><table class="mx"><thead><tr><th scope="col" style="text-align:left;font-family:var(--sans);font-size:12px">Variable</th>' +
-      S.months.map(function(m, i){ return '<th scope="col" class="' + (i === ci ? 'now' : '') + '">' + shortMonth(m.label) + '</th>'; }).join('') +
-      '<th scope="col">RESUMEN</th></tr></thead><tbody>' +
-      VAR_IDS.map(function(vid){
-        var d = VARS[vid], ser = seriesOf(S.sel, vid), ag = aggregate(S.sel, vid);
-        return '<tr style="cursor:pointer" onclick="selectVar(\'' + vid + '\')"><th scope="row">' + esc(d.short === 'Anomalía' ? 'Anomalía de precipitación' : d.short) + ' <span class="mono" style="color:#5A6A75;font-size:11px">' + esc(d.unit) + '</span></th>' +
-          ser.map(function(s, i){
-            var c = getCat(s.v, d);
-            return '<td class="' + (i === ci ? 'now' : '') + '" title="' + esc(s.label + ' · ' + c.cat) + '" style="background:' + rgb(c.rgb) + ';color:' + textOn(c.rgb) + '">' + fmt(s.v, Math.min(d.dec, 2)) + '</td>';
-          }).join('') +
-          '<td class="res">' + fmt(ag, Math.min(d.dec, 2)) + '<small>' + aggLbl[d.agg] + '</small></td></tr>';
-      }).join('') + '</tbody></table></div>' +
-      '<div class="leg-line"><b>Agua y suelo</b>' +
-        legendItem(C.def, 'Déficit / bajo') + legendItem(C.ocre, 'Baja') + legendItem(C.arena, 'Normal / satisfactorio') + legendItem(C.crema, 'Aceptable') + legendItem(C.celeste, 'Leve exceso / buena') + legendItem(C.azul, 'Exceso / elevado') + '</div>' +
-      '<div class="leg-line"><b>Vegetación</b>' +
-        legendItem(C.def, 'Escasa / alta disminución') + legendItem(C.ocre, 'Disminución') + legendItem(C.arena, 'Poco frondosa') + legendItem(C.crema, 'Variación normal') + legendItem(C.verdeC, 'Frondosa / aumento') + legendItem(C.verde, 'Muy frondosa / alto aumento') + '</div>' +
-      '<div class="note">Valores mensuales por departamento. El resumen suma las variables acumuladas, promedia las de estado y toma la última estimación en las anomalías de humedad y NDVI.</div></section>' +
-      notesHTML(true);
-  } else {
-    html += '<div class="note">Cargando serie temporal…</div>';
-  }
+  var aggLbl = {sum:'Σ acumulado', mean:'media', last:'último mes'};
+  html += '<section class="box"><div class="box-h"><h2>Estado mensual por variable</h2><span>valor y percentil · clic en una fila para verla en el mapa</span></div>' +
+    '<div class="scroll-x"><table class="mx"><thead><tr><th scope="col" style="text-align:left;font-family:var(--sans);font-size:12px">Variable</th>' +
+    S.months.map(function(m, i){ return '<th scope="col" class="' + (i === S.mIdx ? 'now' : '') + '">' + shortMonth(m) + '</th>'; }).join('') +
+    '<th scope="col">RESUMEN</th></tr></thead><tbody>' +
+    VAR_IDS.map(function(vid){
+      var dd = VARS[vid], ag = aggregate(in1, vid);
+      return '<tr style="cursor:pointer" onclick="selectVar(\'' + vid + '\')"><th scope="row">' + esc(dd.short) + ' <span class="mono" style="color:#5A6A75;font-size:11px">' + esc(dd.unit) + '</span></th>' +
+        S.months.map(function(m, i){
+          var v = val(in1, vid, m), p = pct(in1, vid, m), c = catOf(p, vid);
+          return '<td class="' + (i === S.mIdx ? 'now' : '') + '" title="' + esc(m.label + ' · ' + c.word) + '" style="background:' + rgb(c.rgb) + ';color:' + textOn(c.rgb) + '">' +
+            fmt(v, Math.min(dd.dec, 2)) + '<small>' + (isNaN(p) ? '' : 'p' + Math.round(p)) + '</small></td>';
+        }).join('') +
+        '<td class="res">' + fmt(ag, Math.min(dd.dec, 2)) + '<small>' + aggLbl[dd.agg] + '</small></td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    '<div class="leg-line"><b>Agua y suelo</b>' + PAL.agua.map(function(c, i){ return legendItem(c, WORDS_LONG[i]); }).join('') + '</div>' +
+    '<div class="leg-line"><b>Temperatura</b>' + PAL.temp.map(function(c, i){ return legendItem(c, WORDS_LONG[i]); }).join('') + '</div>' +
+    '<div class="leg-line"><b>Productividad</b>' + PAL.veg.map(function(c, i){ return legendItem(c, WORDS_LONG[i]); }).join('') + '</div>' +
+    '<div class="note">Cada celda muestra el valor del mes y su percentil (p). El resumen suma la precipitación y la productividad, promedia la temperatura y la humedad 7–28 cm, y toma el último mes de la humedad profunda.</div></section>' +
+    notesHTML();
   el.innerHTML = html;
 }
-function legendItem(c, t){ return '<span><i class="sw" style="width:12px;height:12px;background:' + rgb(c) + '"></i>' + esc(t) + '</span>'; }
-
 function downloadDeptCSV(){
   if (!S.sel) return;
-  var p = S.byIn1[S.sel].properties;
-  var rows = [['mes'].concat(VAR_IDS).join(',')];
+  var cols = []; VAR_IDS.forEach(function(v){ cols.push(v, v + '_p', v + '_med'); });
+  var rows = [['mes'].concat(cols).join(',')];
   S.months.forEach(function(m){
-    var r = m.byIn1[S.sel] || {};
-    rows.push([csvCell(m.label)].concat(VAR_IDS.map(function(v){ var x = num(r[v]); return isNaN(x) ? '' : x; })).join(','));
+    var r = row(S.sel, m) || {};
+    rows.push([csvCell(m.label)].concat(cols.map(function(c){ return r[c] == null ? '' : r[c]; })).join(','));
   });
-  downloadText('serie_' + p.in1 + '_' + sinTilde(p.iadepto_si).replace(/\W+/g, '_') + '.csv', rows.join('\n'));
+  downloadText('serie_' + S.sel + '_' + sinTilde(nameOf(S.sel)).replace(/\W+/g, '_') + '.csv', rows.join('\n'));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// Panorama nacional / provincial
+// Panorama
 // ═════════════════════════════════════════════════════════════════════════════
 function populateProvinces(){
-  var sel = $('pn-prov'); if (!S.gj) return;
   var map = {};
-  S.gj.features.forEach(function(f){ var cp = (f.properties.in1 || '').substring(0, 2); if (cp && !map[cp]) map[cp] = provName(f.properties.iaprov_sin) || cp; });
+  allIds().forEach(function(k){ var cp = k.substring(0, 2); if (!map[cp]) map[cp] = provOf(k) || cp; });
   var arr = Object.keys(map).map(function(k){ return {k:k, n:map[k]}; }).sort(function(a, b){ return a.n.localeCompare(b.n); });
-  sel.innerHTML = '<option value="">Todo el país</option>' + arr.map(function(o){ return '<option value="' + o.k + '">' + esc(o.n) + '</option>'; }).join('');
-  sel.value = S.prov;
+  $('pn-prov').innerHTML = '<option value="">Todo el país</option>' + arr.map(function(o){ return '<option value="' + o.k + '">' + esc(o.n) + '</option>'; }).join('');
+  $('pn-prov').value = S.prov;
 }
 function panoramaData(){
-  var vid = S.vid, vdef = VARS[vid];
-  var feats = S.gj.features.filter(function(f){ return !S.prov || (f.properties.in1 || '').substring(0, 2) === S.prov; });
-  var deps = feats.map(function(f){ var p = f.properties; return {in1:p.in1, n:p.iadepto_si || p.nam, prov:provName(p.iaprov_sin), v:num(p[vid])}; })
-    .filter(function(d){ return !isNaN(d.v); }).sort(function(a, b){ return b.v - a.v; });
+  var vid = S.vid;
+  var ids = allIds().filter(function(k){ return !S.prov || k.substring(0, 2) === S.prov; });
+  var deps = ids.map(function(k){ return {in1:k, n:nameOf(k), prov:provOf(k), v:val(k, vid), p:pct(k, vid), med:med(k, vid)}; })
+    .filter(function(x){ return !isNaN(x.p); }).sort(function(a, b){ return b.p - a.p; });
   var rank;
-  if (S.prov) rank = deps.map(function(d){ return {n:d.n, v:d.v, in1:d.in1}; });
+  if (S.prov) rank = deps.map(function(x){ return {n:x.n, p:x.p, in1:x.in1}; });
   else {
     var acc = {};
-    deps.forEach(function(d){ (acc[d.prov] = acc[d.prov] || []).push(d.v); });
-    rank = Object.keys(acc).map(function(k){ var a = acc[k]; return {n:k, v:a.reduce(function(x, y){ return x + y; }, 0) / a.length, cnt:a.length}; })
-      .sort(function(a, b){ return b.v - a.v; });
+    deps.forEach(function(x){ (acc[x.prov] = acc[x.prov] || []).push(x.p); });
+    rank = Object.keys(acc).map(function(k){ var a = acc[k]; return {n:k, p:a.reduce(function(s, y){ return s + y; }, 0) / a.length}; })
+      .sort(function(a, b){ return b.p - a.p; });
   }
-  return {vdef:vdef, feats:feats, deps:deps, rank:rank, cc:catCounts(feats, vid)};
+  return {ids:ids, deps:deps, rank:rank, cc:catCounts(ids, vid)};
 }
 function renderPanorama(){
-  if (!S.gj) return;
-  var D = panoramaData(), vdef = D.vdef, cc = D.cc, valid = (vdef.nodata ? cc.total : cc.total - cc.nd) || 1;
+  if (!cur()) return;
+  var D = panoramaData(), d = VARS[S.vid], pal = PAL[d.pal], cc = D.cc, valid = (cc.total - cc.nd) || 1;
   var amb = S.prov ? $('pn-prov').selectedOptions[0].textContent : 'Argentina';
-  $('pn-kick').textContent = 'Boletín mensual · ' + amb + ' · ' + cc.total + ' departamentos';
+  $('pn-kick').textContent = 'Boletín mensual · ' + amb + ' · ' + cc.total + ' departamentos · referencia ' + BASE_TXT;
   $('pn-title').textContent = 'Panorama hídrico — ' + curLabel().toLowerCase();
-
-  $('pn-cards').innerHTML = vdef.thresholds.map(function(t){
-    var n = cc.counts[t.cat];
-    return '<div class="card kpi" style="border-top-color:' + rgb(t.rgb) + '"><div class="t">' + esc(t.cat) + '</div>' +
+  $('pn-cards').innerHTML = CATS.map(function(c, i){
+    var n = cc.counts[i];
+    return '<div class="card kpi" style="border-top-color:' + rgb(pal[i]) + '"><div class="t">' + esc(WORDS_LONG[i]) + '</div>' +
       '<div class="n"><span class="mono">' + n + '</span><span>deptos · ' + Math.round(n / valid * 100) + ' %</span></div>' +
-      '<div class="s">' + esc(t.range) + ' ' + esc(vdef.unit) + '</div></div>';
-  }).join('') + (vdef.nodata ? '<div class="card kpi" style="border-top-color:' + rgb(vdef.nodata.rgb) + '"><div class="t">' + esc(vdef.nodata.cat) + '</div>' +
-      '<div class="n"><span class="mono">' + cc.nd + '</span><span>deptos · ' + Math.round(cc.nd / (cc.total || 1) * 100) + ' %</span></div>' +
-      '<div class="s">suelo sobresaturado, anomalía no estimada</div></div>' : '');
-  $('pn-notes').innerHTML = notesHTML(true);
-
-  $('pn-rk-title').textContent = S.prov ? (vdef.label + ' por departamento') : (vdef.label + ' media por provincia');
-  $('pn-rk-sub').textContent = vdef.unit + (S.prov ? '' : ' · promedio de departamentos');
-  var maxAbs = Math.max.apply(null, D.rank.map(function(r){ return Math.abs(r.v); }).concat([1e-6]));
+      '<div class="s">' + esc(c.range) + '</div></div>';
+  }).join('');
+  $('pn-rk-title').textContent = S.prov ? (d.label + ' · percentil por departamento') : (d.label + ' · percentil medio por provincia');
+  $('pn-rk-sub').textContent = '0–100 · 50 = normal';
   $('pn-rk').innerHTML = D.rank.length ? D.rank.map(function(r){
-    var c = getCat(r.v, vdef);
+    var c = catOf(r.p, S.vid);
     return '<div class="rk"' + (r.in1 ? ' style="cursor:pointer" onclick="pickDept(\'' + r.in1 + '\')"' : '') + '><div class="nm" title="' + esc(r.n) + '">' + esc(r.n) + '</div>' +
-      '<div class="tr"><i style="width:' + (Math.abs(r.v) / maxAbs * 100).toFixed(1) + '%;background:' + rgb(c.rgb) + '"></i></div>' +
-      '<div class="v">' + fmt(r.v, vdef.dec) + '</div></div>';
+      '<div class="tr"><i style="width:' + Math.max(1, r.p).toFixed(1) + '%;background:' + rgb(c.rgb) + '"></i></div>' +
+      '<div class="v">p' + Math.round(r.p) + '</div></div>';
   }).join('') : '<div class="note">Sin datos.</div>';
-
   function topList(list){
-    return list.map(function(d, i){
-      return '<button class="top-row" onclick="pickDept(\'' + d.in1 + '\')"><span class="i">' + (i + 1) + '</span>' +
-        '<span class="nm"><b>' + esc(d.n) + '</b><small>' + esc(d.prov) + '</small></span><span class="v">' + fmt(d.v, vdef.dec) + '</span></button>';
+    return list.map(function(x, i){
+      return '<button class="top-row" onclick="pickDept(\'' + x.in1 + '\')"><span class="i">' + (i + 1) + '</span>' +
+        '<span class="nm"><b>' + esc(x.n) + '</b><small>' + esc(x.prov) + ' · ' + fmtU(x.v, d) + '</small></span><span class="v">p' + Math.round(x.p) + '</span></button>';
     }).join('') || '<div class="note">Sin datos.</div>';
   }
   $('pn-top').innerHTML = topList(D.deps.slice(0, 10));
   $('pn-bot').innerHTML = topList(D.deps.slice(-10).reverse());
-  $('pn-dist').innerHTML = stackHTML(cc, vdef, 'lg') +
-    '<div class="dist-g" style="font-size:13px;gap:8px 16px">' + vdef.thresholds.map(function(t){
-      return '<div><span style="display:flex;align-items:center;gap:6px"><i class="sw" style="background:' + rgb(t.rgb) + '"></i>' + esc(t.cat) + '</span><b>' + cc.counts[t.cat] + '</b></div>';
-    }).join('') + ndRow(cc, vdef) + '</div>';
+  $('pn-dist').innerHTML = stackHTML(cc, S.vid, 'lg') + distGrid(cc, S.vid, true);
+  $('pn-notes').innerHTML = notesHTML();
 }
 function downloadPanoramaCSV(){
-  if (!S.gj) return;
+  if (!cur()) return;
   var D = panoramaData(), vid = S.vid;
-  var rows = ['in1,departamento,provincia,' + vid + ',categoria'];
-  D.deps.forEach(function(d){ rows.push([d.in1, csvCell(d.n), csvCell(d.prov), d.v, csvCell(getCat(d.v, D.vdef).cat)].join(',')); });
-  downloadText('panorama_' + vid + '_' + PERIODS[S.pIdx].file.match(/(\d{6})/)[1] + (S.prov ? '_' + S.prov : '') + '.csv', rows.join('\n'));
+  var rows = ['in1,departamento,provincia,' + vid + ',' + vid + '_p,' + vid + '_med,categoria'];
+  D.deps.forEach(function(x){ rows.push([x.in1, csvCell(x.n), csvCell(x.prov), x.v, x.p, x.med, csvCell(catOf(x.p, vid).word)].join(',')); });
+  downloadText('panorama_' + vid + '_' + cur().key + (S.prov ? '_' + S.prov : '') + '.csv', rows.join('\n'));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1214,22 +1153,23 @@ window.addEventListener('DOMContentLoaded', function(){
   loadLogo('logo-cyano', 'cyanosat_b64.txt', 'FullLogo_Transparent_NoBuffer.png');
   loadLogo('logo-envsat', 'envsat_b64.txt', 'envsat_fondo_oscuro-removeBackG.png');
   $('appfloods-link').href = APPFLOODS_URL;
-
-  $('period-select').innerHTML = PERIODS.map(function(p, i){ return '<option value="' + i + '">' + esc(p.label) + '</option>'; }).join('');
   $('pn-var').innerHTML = GROUPS.map(function(g){
     return '<optgroup label="' + g.label + '">' + g.vars.map(function(v){ return '<option value="' + v + '">' + esc(VARS[v].label) + ' (' + esc(VARS[v].unit) + ')</option>'; }).join('') + '</optgroup>';
   }).join('');
-
-  buildVarRail(); buildTimeline(); initSearch(); initMap(); renderDetail();
-  selectVar(S.vid);
-  loadPeriod(0);
-  loadAllMonths();
-  fixMapSize();
+  buildVarRail(); initSearch(); initMap(); renderDetail();
+  document.querySelectorAll('.vbtn').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-vid') === S.vid); });
+  loadAll().then(function(){
+    $('loading').classList.remove('on');
+    if (!S.months.length) { $('loading').textContent = 'No se encontraron archivos ' + PREFIJO + 'AAAAMM.csv en data/'; $('loading').classList.add('on'); return; }
+    buildTimeline(); populateProvinces();
+    loadMonth(S.months.length - 1);
+    fixMapSize();
+  }).catch(function(e){
+    $('loading').textContent = 'No se pudieron cargar los datos'; console.error(e);
+  });
 });
 window.addEventListener('resize', function(){ if (deckgl) deckgl.redraw(true); });
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && S.view === 'ficha') setView('mapa');
-});
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && S.view === 'ficha') setView('mapa'); });
 </script>
 </body>
 </html>
