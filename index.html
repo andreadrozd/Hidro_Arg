@@ -637,7 +637,7 @@ function renderLegend(){
     items.map(function(t){
       return '<div><i style="background:' + rgb(t.rgb) + '"></i><b title="' + esc(t.cat) + '">' + esc(t.cat) + '</b><small>' + esc(t.range) + '</small></div>';
     }).join('') + '</div>' +
-    (/^A/.test(S.vid) ? '<div class="note" style="font-size:12px">Anomalía estimada de forma rápida a partir del desvío respecto de la media. Más detalle y precisión en ' + APPFLOODS_A() + '.</div>' : '');
+    (/^A/.test(S.vid) ? '<div class="note" style="font-size:12px">Anomalía estimada de forma rápida a partir del desvío respecto de la media. Estimaciones más precisas en ' + APPFLOODS_A() + '.</div>' : '');
 }
 
 function buildTimeline(){
@@ -873,6 +873,7 @@ function loadPeriod(idx){
     S.gj = gj; S.byIn1 = {};
     gj.features.forEach(function(f){ if (f.properties.in1) S.byIn1[f.properties.in1] = f; });
     populateProvinces();
+    mergeCurrentIntoMonths();
     updateMap(); renderLegend(); renderRailDist(); renderDetail();
     if (S.view === 'panorama') renderPanorama();
     if (S.view === 'ficha') renderFicha();
@@ -885,7 +886,7 @@ function loadPeriod(idx){
 // Serie compacta sin geometría (data/series_hidro.json). Si falta, descarga todos los GeoJSON.
 function loadAllMonths(){
   var vm = PERIODS[0].file.match(/(\d{6})/), ver = vm ? vm[1] : '1';
-  fetch(DATA_DIR + 'series_hidro.json?v=' + ver)
+  fetch(DATA_DIR + 'series_hidro.json?v=' + ver, {cache:'no-cache'})
     .then(function(r){ if (!r.ok) throw 0; return r.json(); })
     .then(function(s){
       S.months = s.meses.map(function(lbl){
@@ -893,6 +894,7 @@ function loadAllMonths(){
         for (var k in s.datos) if (s.datos[k][lbl]) by[k] = s.datos[k][lbl];
         return {label:lbl, byIn1:by};
       });
+      mergeCurrentIntoMonths();
       renderDetail(); if (S.view === 'ficha') renderFicha();
     })
     .catch(function(){
@@ -904,6 +906,18 @@ function loadAllMonths(){
       })).then(function(arr){ S.months = arr; renderDetail(); if (S.view === 'ficha') renderFicha(); })
         .catch(function(e){ console.error('loadAllMonths', e); });
     });
+}
+// Si series_hidro.json quedó desactualizado (le falta el mes cargado), lo completa con el GeoJSON del mes
+function mergeCurrentIntoMonths(){
+  if (!S.gj || !S.months.length) return;
+  var l = curLabel();
+  if (S.months.some(function(m){ return m.label === l; })) return;
+  var by = {};
+  S.gj.features.forEach(function(f){ if (f.properties.in1) by[f.properties.in1] = f.properties; });
+  S.months.push({label:l, byIn1:by});
+  var order = chrono().map(function(o){ return o.p.label; });
+  S.months.sort(function(a, b){ return order.indexOf(a.label) - order.indexOf(b.label); });
+  console.warn('series_hidro.json no incluye ' + l + ': se completó desde el GeoJSON. Conviene regenerarlo con make_series.py');
 }
 function seriesOf(in1, vid){
   return S.months.map(function(m){ var p = m.byIn1[in1]; return {label:m.label, v: p ? num(p[vid]) : NaN}; });
