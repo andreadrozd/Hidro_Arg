@@ -488,6 +488,8 @@ var VARS = {
       {cat:'Alto aumento',     rgb:C.verde,  range:'> 0,7',         test:function(v){return v>0.7}}]}
 };
 var VAR_IDS = Object.keys(VARS);
+// Sección de metodologia.html para cada variable
+var METO_ID = {ppt_mean:'ppt', APPT_mean:'appt', Tppt_mean:'tppt', Hum_mean:'hum', AHum_mean:'ahum', inf_mean:'inf', InfEf_mean:'infef', ndvi_mean:'ndvi', Andvi_mean:'andvi'};
 
 // Nombres de provincia con tildes (los datos vienen sin)
 var PROV_ES = {'Entre Rios':'Entre Ríos','Cordoba':'Córdoba','Neuquen':'Neuquén','Rio Negro':'Río Negro','Tucuman':'Tucumán',
@@ -632,7 +634,7 @@ function renderLegend(){
   var items = v.nodata ? v.thresholds.concat([v.nodata]) : v.thresholds;
   $('legend').innerHTML =
     '<div class="legend-h"><b>' + esc(v.label) + ' <span>· ' + esc(v.unit) + ' · ' + esc(curLabel().toLowerCase()) + '</span></b>' +
-    '<a href="metodologia.html" target="_blank" rel="noopener">Cómo se calcula</a></div>' +
+    '<a href="metodologia.html#' + (METO_ID[S.vid] || '') + '" target="_blank" rel="noopener">Cómo se calcula</a></div>' +
     '<div class="legend-g" style="grid-template-columns:repeat(' + items.length + ',minmax(0,1fr))">' +
     items.map(function(t){
       return '<div><i style="background:' + rgb(t.rgb) + '"></i><b title="' + esc(t.cat) + '">' + esc(t.cat) + '</b><small>' + esc(t.range) + '</small></div>';
