@@ -36,9 +36,9 @@ a{color:var(--link)}
 .brand span{font-size:12px;color:var(--mut-d)}
 .spacer{flex:1 1 auto}
 .nav{display:flex;gap:4px;flex-wrap:wrap}
-.nav a,.nav button{padding:8px 12px;border-radius:6px;border:0;background:transparent;color:var(--mut-d2);text-decoration:none;font-size:13px}
+.nav a,.nav button{padding:9px 16px;border-radius:6px;border:0;background:transparent;color:var(--mut-d2);text-decoration:none;font-size:15px;font-weight:500;letter-spacing:.01em}
 .nav a:hover,.nav button:hover{background:var(--ink2);color:#fff}
-.nav .on{background:var(--ink3);color:#fff;font-weight:500}
+.nav .on{background:var(--ink3);color:#fff;font-weight:600}
 .period{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:6px;border:1px solid #344856;background:var(--ink2);color:var(--txt-d);font-size:13px}
 .period select{background:transparent;color:var(--txt-d);border:0;font-size:13px;font-weight:600;font-family:var(--mono);outline:none;cursor:pointer}
 .period select option{color:var(--txt);background:#fff}
@@ -245,7 +245,7 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
   .brand{border-left:0;padding-left:0}
   .brand b{font-size:15px}
   .nav{order:5;width:100%}
-  .nav a,.nav button{flex:1;text-align:center}
+  .nav a,.nav button{flex:1;text-align:center;font-size:16px;min-height:44px;display:flex;align-items:center;justify-content:center}
   #view-mapa{flex-direction:column}
   #rail{flex:0 0 auto;border-right:0;border-bottom:1px solid #D5DCDA;padding:10px 12px;gap:8px;overflow:visible}
   #rail .fld-lbl,.grp-t,.dist{display:none}
@@ -267,6 +267,9 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
   .p-head h1{font-size:26px}
   .page-in{padding:16px 14px 40px}
   .rk{grid-template-columns:110px minmax(0,1fr) 56px}
+  .p-act{width:100%}
+  .p-act .sel{flex:1 1 100%;min-width:0;width:100%}
+  .p-act .btn-out{flex:1 1 auto;justify-content:center}
 }
 @media print{
   body{overflow:visible;height:auto;background:#fff}
@@ -293,6 +296,21 @@ table.mx td.res small{display:block;font-size:10px;font-weight:400;color:var(--m
 .bc .band{position:absolute;left:0;right:0;border-top:1px dashed #A9B4B8}
 .bc .band span{position:absolute;right:0;top:-14px;font-family:var(--mono);font-size:10px;color:var(--mut2);background:rgba(255,255,255,.85);padding:0 2px}
 table.mx td small{display:block;font-size:10px;opacity:.85;font-weight:400}
+
+/* ── Ficha del departamento (panel lateral): textos más grandes ── */
+#detail .d-top{font-size:13px}
+#detail .d-sub{font-size:14px}
+#detail .d-main-h b{font-size:15px}
+#detail .chip{font-size:12.5px;padding:4px 10px}
+#detail .big span:last-child{font-size:16px}
+#detail .medline{font-size:14.5px}
+#detail .note{font-size:13px}
+#detail .bc-x{font-size:12.5px}
+#detail .d-sec{font-size:12.5px}
+#detail .d-row{font-size:15px;min-height:48px}
+#detail .d-row .val{width:auto;min-width:120px;white-space:nowrap}
+#detail .d-row .sw{width:12px;height:12px}
+#detail .ptag{font-size:13px}
 </style>
 </head>
 <body>
@@ -972,7 +990,7 @@ function renderDetail(){
       '<div class="big"><span class="mono">' + fmt(v, d.dec) + '</span><span>' + esc(d.unit) + '</span></div>' +
       '<div class="medline">Normal del mes (mediana ' + BASE_TXT + '): <b>' + fmtU(md, d) + '</b></div>' +
       barChart(seriesOf(in1, S.vid, true), {height:64, curIdx:S.mIdx, gap:4, initials:!S.multiYear, showMed:true}) +
-      '<div class="note" style="font-size:11px">Barras: valor de cada mes · línea: valor normal del mes</div>' +
+      '<div class="note">Barras: valor de cada mes · línea: valor normal del mes</div>' +
     '</div>' +
     '<div class="d-sec">Todas las variables</div><div class="d-list">' +
     VAR_IDS.map(function(vid){
@@ -1001,7 +1019,7 @@ function openFicha(){ if (S.sel) { setView('ficha'); $('view-ficha').scrollTop =
 function notesHTML(){
   return '<div class="notes"><p><b>Cómo leer los percentiles.</b> Cada valor se compara con el mismo mes de los 25 años ' + BASE_TXT +
     ': el percentil indica qué porcentaje de esos años tuvo un valor menor. Percentil 50 = valor normal (mediana); menos de 10 o más de 90 = situación poco frecuente.</p>' +
-    '<p><b>Nota sobre las anomalías.</b> Las anomalías se estiman de forma rápida y generalizada a partir del desvío respecto de lo normal. Para un mayor nivel de detalle y precisión, consultá <a href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">AppFloods</a>.</p>' +
+    '<p><b>Nota sobre las anomalías.</b> Las estimaciones son satelitales, basadas en la respuesta radiométrica e integradas con datos topográficos y edafológicos, aunque no están calibradas localmente. Para un mayor nivel de detalle y precisión, consultá <a href="' + APPFLOODS_URL + '" target="_blank" rel="noopener">AppFloods</a>.</p>' +
     '<p><b>Datos provisorios.</b> Los últimos meses pueden actualizarse cuando ERA5-Land y MODIS completan su publicación.</p></div>';
 }
 
